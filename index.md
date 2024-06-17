@@ -13,5 +13,3 @@ The results of this project include:
 ### Publications
 
 > Junhyung Lyle Kim, Nai-Hui Chia, Anastasios Kyrillidis, [**``A Catalyst Framework for the Quantum Linear System Problem via the Proximal Point Algorithm''**](), Preprint.
->
-
