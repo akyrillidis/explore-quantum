@@ -8,7 +8,7 @@ Through rigorous research and collaboration, we strive to contribute to the rapi
 
 The results of this project include: 
 
-- [](./QLSP_PPA.html).
+- [A Catalyst Framework for the Quantum Linear System Problem via the Proximal Point Algorithm](./QLSP_PPA.html).
 
 ### Publications
 
