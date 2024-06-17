@@ -4,4 +4,4 @@
 
 ## Usage
 
-This is the github page that hosts the web-page: https://akyrillidis.github.io/ExploreQuantum/
+This is the github page that hosts the web-page: https://akyrillidis.github.io/explore-quantum/
