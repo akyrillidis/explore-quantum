@@ -211,7 +211,7 @@
         Solving systems of linear equations is essential in numerous applications, from scientific computing to machine learning. 
         Classical algorithms like Gaussian elimination and iterative methods scale poorly with the problem size, often rendering large-scale problems intractable. 
         Quantum algorithms offer a potential breakthrough by reducing the dependency on problem dimensions from polynomial to logarithmic, as demonstrated by the Harrow-Hassidim-Lloyd (HHL) algorithm. 
-        Despite this, the performance of quantum algorithms is severely impacted by the condition number $\kappa$ of the matrix, which measures the sensitivity of the system to numerical errors. 
+        Despite this, the performance of quantum algorithms is severely impacted by the condition number \(\kappa\) of the matrix, which measures the sensitivity of the system to numerical errors. 
         High-condition numbers can significantly degrade the efficiency of quantum solutions, a challenge we address in this study.
     </p>
     <p>
@@ -228,13 +228,13 @@
         </h2>
     </center>
     <p>        
-        The Quantum Linear System Problem (QLSP) aims to prepare a quantum state proportional to the solution vector $x^\star$ of a linear system $Ax = b$. 
+        The Quantum Linear System Problem (QLSP) aims to prepare a quantum state proportional to the solution vector \(x^\star\) of a linear system \(Ax = b\). 
         This task is central to many quantum algorithms, including those for solving differential equations, machine learning, and optimization problems. 
         Existing quantum algorithms, such as the HHL algorithm, achieve significant speedups over classical methods by reducing the complexity from polynomial to logarithmic in the problem dimension $N$. 
-        However, their performance is often limited by the condition number $\kappa$ of the matrix $A$.
+        However, their performance is often limited by the condition number \(\kappa\) of the matrix \(A\).
     </p>
     <p>
-        The condition number $\kappa$ is defined as the ratio of the largest to the smallest singular value of $A$. 
+        The condition number \(\kappa\) is defined as the ratio of the largest to the smallest singular value of \(A\). 
         High-condition numbers indicate ill-conditioned systems that are susceptible to numerical errors, which can significantly slow down convergence and reduce accuracy. 
         Addressing this limitation is crucial for extending the applicability of quantum algorithms to real-world problems, which often involve ill-conditioned matrices.
     </p>
@@ -265,14 +265,14 @@
         Our contributions are as follows:
     </p>
         <ul>
-            <li><strong>Improved Condition Number:</strong> Our method reduces the effective condition number from $\kappa$ to $\frac{\kappa (1+\eta)}{\kappa + \eta}$, where $\eta$ is a tunable parameter. This reduction leads to faster convergence and greater accuracy.</li>
+            <li><strong>Improved Condition Number:</strong> Our method reduces the effective condition number from \(\kappa\) to \(\frac{\kappa (1+\eta)}{\kappa + \eta}\), where \(\eta\) is a tunable parameter. This reduction leads to faster convergence and greater accuracy.</li>
             <li><strong>Flexibility:</strong> The proposed framework is versatile, allowing for different \texttt{QLSP\_solver}s to be used as subroutines. This flexibility enables users to choose the most appropriate solver for their specific problem.</li>
-            <li><strong>Tunable Parameter $\eta$:</strong> By carefully selecting the parameter $\eta$, users can balance the trade-off between runtime and approximation error, optimizing overall algorithmic complexity.</li>
+            <li><strong>Tunable Parameter \(\eta\):</strong> By carefully selecting the parameter \(\eta\), users can balance the trade-off between runtime and approximation error, optimizing overall algorithmic complexity.</li>
         </ul>
     <p>
-        Our approach stands out by directly approximating the solution vector $x^\star = A^{-1}b$ through iterative refinement. 
-        This is in contrast to existing methods that focus on approximating the inverse of the coefficient matrix $A$. 
-        By inverting a modified matrix $(I + \eta A)$, our algorithm effectively preconditions the system, resulting in a better-conditioned problem that converges more rapidly.
+        Our approach stands out by directly approximating the solution vector \(x^\star = A^{-1}b\) through iterative refinement. 
+        This is in contrast to existing methods that focus on approximating the inverse of the coefficient matrix \(A\). 
+        By inverting a modified matrix \((I + \eta A)\), our algorithm effectively preconditions the system, resulting in a better-conditioned problem that converges more rapidly.
     </p>    
 
     <br><hr>
@@ -280,13 +280,13 @@
         <center><h1>Algorithm and Theoretical Analysis</h1></center>
         <tr>
             <td>
-                Our proposed algorithm employs the proximal point algorithm (PPA) to iteratively solve the QLSP. The core idea is to invert the modified matrix $(I + \eta A)$ instead of the original matrix $A$, thus improving the system's conditioning. The algorithm proceeds as follows:
+                Our proposed algorithm employs the proximal point algorithm (PPA) to iteratively solve the QLSP. The core idea is to invert the modified matrix \((I + \eta A)\) instead of the original matrix \(A\), thus improving the system's conditioning. The algorithm proceeds as follows:
 
-                1. **Initialization:** Start with an initial guess $x_0$ for the solution vector.
-                2. **Matrix Modification:** Modify the matrix $A$ to $I + \eta A$.
+                1. **Initialization:** Start with an initial guess \(x_0\) for the solution vector.
+                2. **Matrix Modification:** Modify the matrix \(A\) to \(I + \eta A\).
                 3. **Iterative Refinement:** Apply any existing \texttt{QLSP\_solver} to invert the modified matrix and refine the solution iteratively.
 
-                The convergence rate and error bounds of our algorithm are rigorously analyzed. By carefully choosing the parameter $\eta$, the algorithm balances the trade-off between runtime and approximation error. Our theoretical analysis demonstrates that the proposed method achieves faster convergence and greater accuracy than existing quantum solvers, especially for ill-conditioned problems.
+                The convergence rate and error bounds of our algorithm are rigorously analyzed. By carefully choosing the parameter \(\eta\), the algorithm balances the trade-off between runtime and approximation error. Our theoretical analysis demonstrates that the proposed method achieves faster convergence and greater accuracy than existing quantum solvers, especially for ill-conditioned problems.
 
                 We also provide a detailed complexity analysis, showing that our method significantly reduces the dependence on the condition number $\kappa$. This improvement is quantified through a series of lemmas and theorems that establish the theoretical foundations of our approach.
             </td>
