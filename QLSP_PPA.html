@@ -118,7 +118,7 @@
         gtag('js', new Date());
         gtag('config', 'UA-75863369-6');
     </script>
-    <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 </head>
 
 <body>
@@ -198,7 +198,7 @@
         However, these quantum advantages are often constrained by the condition number of the matrix in question. 
         In our recent paper, we propose a novel quantum algorithm inspired by the classical proximal point algorithm (PPA). 
         This meta-algorithm enhances existing quantum linear system solvers by improving their dependence on the condition number, thereby broadening their applicability to more ill-conditioned problems. 
-        By carefully selecting a parameter $$\eta$$, our method effectively preconditions the linear system, mitigating the bottleneck imposed by large condition numbers.
+        By carefully selecting a parameter $\eta$, our method effectively preconditions the linear system, mitigating the bottleneck imposed by large condition numbers.
     </p>
     
     <br><hr>
@@ -211,7 +211,7 @@
         Solving systems of linear equations is essential in numerous applications, from scientific computing to machine learning. 
         Classical algorithms like Gaussian elimination and iterative methods scale poorly with the problem size, often rendering large-scale problems intractable. 
         Quantum algorithms offer a potential breakthrough by reducing the dependency on problem dimensions from polynomial to logarithmic, as demonstrated by the Harrow-Hassidim-Lloyd (HHL) algorithm. 
-        Despite this, the performance of quantum algorithms is severely impacted by the condition number $$\kappa$$ of the matrix, which measures the sensitivity of the system to numerical errors. 
+        Despite this, the performance of quantum algorithms is severely impacted by the condition number $\kappa$ of the matrix, which measures the sensitivity of the system to numerical errors. 
         High-condition numbers can significantly degrade the efficiency of quantum solutions, a challenge we address in this study.
     </p>
     <p>
@@ -228,13 +228,13 @@
         </h2>
     </center>
     <p>        
-        The Quantum Linear System Problem (QLSP) aims to prepare a quantum state proportional to the solution vector $$x^\star$$ of a linear system $$Ax = b$$. 
+        The Quantum Linear System Problem (QLSP) aims to prepare a quantum state proportional to the solution vector $x^\star$ of a linear system $Ax = b$. 
         This task is central to many quantum algorithms, including those for solving differential equations, machine learning, and optimization problems. 
-        Existing quantum algorithms, such as the HHL algorithm, achieve significant speedups over classical methods by reducing the complexity from polynomial to logarithmic in the problem dimension $$N$$. 
-        However, their performance is often limited by the condition number $$\kappa$$ of the matrix $$A$$.
+        Existing quantum algorithms, such as the HHL algorithm, achieve significant speedups over classical methods by reducing the complexity from polynomial to logarithmic in the problem dimension $N$. 
+        However, their performance is often limited by the condition number $\kappa$ of the matrix $A$.
     </p>
     <p>
-        The condition number $$\kappa$$ is defined as the ratio of the largest to the smallest singular value of $$A$$. 
+        The condition number $\kappa$ is defined as the ratio of the largest to the smallest singular value of $A$. 
         High-condition numbers indicate ill-conditioned systems that are susceptible to numerical errors, which can significantly slow down convergence and reduce accuracy. 
         Addressing this limitation is crucial for extending the applicability of quantum algorithms to real-world problems, which often involve ill-conditioned matrices.
     </p>
