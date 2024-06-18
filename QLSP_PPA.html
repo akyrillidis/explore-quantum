@@ -267,7 +267,7 @@
     </p>
         <ul>
             <li><strong>Improved Condition Number:</strong> Our method reduces the effective condition number from \(\kappa\) to \(\frac{\kappa (1+\eta)}{\kappa + \eta}\), where \(\eta\) is a tunable parameter. This reduction leads to faster convergence and greater accuracy.</li>
-            <li><strong>Flexibility:</strong> The proposed framework is versatile, allowing for different \texttt{QLSP\_solver}s to be used as subroutines. This flexibility enables users to choose the most appropriate solver for their specific problem.</li>
+            <li><strong>Flexibility:</strong> The proposed framework is versatile, allowing for different QLSP solvers to be used as subroutines. This flexibility enables users to choose the most appropriate solver for their specific problem.</li>
             <li><strong>Tunable Parameter \(\eta\):</strong> By carefully selecting the parameter \(\eta\), users can balance the trade-off between runtime and approximation error, optimizing overall algorithmic complexity.</li>
         </ul>
     <p>
@@ -290,7 +290,7 @@
         <ul>
             <li><strong>Initialization:</strong> Start with an initial guess \(x_0\) for the solution vector.</li>
             <li><strong>Matrix Modification:</strong> Modify the matrix \(A\) to \(I + \eta A\).</li>
-            <li><strong>Iterative Refinement:</strong> Apply any existing \texttt{QLSP\_solver} to invert the modified matrix and refine the solution iteratively.</li>
+            <li><strong>Iterative Refinement:</strong> Apply any existing QLSP solver to invert the modified matrix and refine the solution iteratively.</li>
         </ul>
 
     <br>
@@ -306,8 +306,9 @@
         Our theoretical analysis demonstrates that the proposed method achieves faster convergence and greater accuracy than existing quantum solvers, especially for ill-conditioned problems.
     </p>  
     <p>
-        We also provide a detailed complexity analysis, showing that our method significantly reduces the dependence on the condition number $\kappa$. 
+        We also provide a detailed complexity analysis, showing that our method significantly reduces the dependence on the condition number \(\kappa\). 
         This improvement is quantified through a series of lemmas and theorems that establish the theoretical foundations of our approach.
+        We urge you to check the complete and detailed theoretical analysis in our paper. 
     </p>  
 
      <br><hr>
@@ -316,28 +317,47 @@
             Empirical observations over theory
         </h2>
     </center>
+     <br>
+                <td align="center" width="960px">
+                    <center>
+                        <td><img class="rounded" style="width:720px" src="./assets/img/QLSP_experiment1.png"/></td>
+                    </center>
+                </td>
+
+    <br>
+                <td align="center" width="960px">
+                    <center>
+                        <td><img class="rounded" style="width:720px" src="./assets/img/QLSP_experiment2.png"/></td>
+                    </center>
+                </td>
     
-    <br><hr>
-    <table align="center" width="960px">
-        <center><h1>Conclusion and Future Work</h1></center>
-        <tr>
-            <td>
-                Our proposed framework significantly alleviates the dependency on the condition number in solving the Quantum Linear System Problem (QLSP). By leveraging the proximal point algorithm (PPA), we introduce a meta-algorithm that enhances the performance of existing quantum solvers, broadening their applicability to more challenging, ill-conditioned problems.
-
-                Future work will explore several promising directions:
-
-                1. **Multi-step PPA Implementation:** Extending the algorithm to multi-step PPA implementations could further improve convergence rates and reduce runtime. This involves developing efficient methods for handling multiple iterations of the modified matrix inversion.
-                2. **Warm Starting:** Investigating strategies for better initialization (warm starting) can lead to improved convergence. This may involve using prior knowledge about the solution or leveraging other quantum or classical solvers to provide a good starting point.
-                3. **Hybrid Approaches:** Combining our framework with other optimization techniques, such as quantum-inspired algorithms, could yield even more efficient solvers.
-
-                Our work opens new avenues for research in quantum computing and optimization, providing a robust foundation for developing more advanced algorithms that can tackle a wider range of problems.
-            </td>
-        </tr>
-    </table>
+     <br><hr>
+    <center>
+        <h2>
+            Conclusions and future work
+        </h2>
+    </center>
+                
+    <p>
+        Our proposed framework significantly alleviates the dependency on the condition number in solving the Quantum Linear System Problem (QLSP). 
+        By leveraging the proximal point algorithm (PPA), we introduce a meta-algorithm that enhances the performance of existing quantum solvers, broadening their applicability to more challenging, ill-conditioned problems.
+    </p>
+    <p>
+        Future work will explore several promising directions:
+    </p>
+        <ul>
+            <li><strong>Multi-step PPA Implementation:</strong> Extending the algorithm to multi-step PPA implementations could further improve convergence rates and reduce runtime. This involves developing efficient methods for handling multiple iterations of the modified matrix inversion.</li>
+            <li><strong>Warm Starting:</strong> Investigating strategies for better initialization (warm starting) can lead to improved convergence. This may involve using prior knowledge about the solution or leveraging other quantum or classical solvers to provide a good starting point.</li>
+            <li><strong>Hybrid Approaches:</strong> Combining our framework with other optimization techniques, such as quantum-inspired algorithms, could yield even more efficient solvers.</li>
+        </ul>
+        
+    <p>
+        Our work opens new avenues for research in quantum computing and optimization, providing a robust foundation for developing more advanced algorithms that can tackle a wider range of problems.
+    </p>        
 
     <br><hr>
     <center>
         <h1>Acknowledgements</h1>
-        <p>We acknowledge the support from the National Science Foundation (NSF) and Intel under grant CNS-2003137. The code for this project can be found on <a href="https://github.com/jlylekim/QLSP_Proximal">GitHub</a>.</p>
+        <p>This work is supported by NSF CMMI no. 2037545, NSF CAREER award no. 2145629, Welch Foundation Grant #A22-0307, a Microsoft Research Award, an Amazon Research Award, and a Ken Kennedy Aspiring Cluster Research award (Rice K2I).</p>
     </center>
     <br>
