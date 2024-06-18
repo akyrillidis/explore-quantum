@@ -181,7 +181,7 @@
     <br>
     <td align="center" width="960px">
         <center>
-            <td><img class="rounded" style="width:960px" src="./assets/img/QLSP_table.png"/></td>
+            <td><img class="rounded" style="width:720px" src="./assets/img/QLSP_table.png"/></td>
         </center>
     </td>
 
@@ -243,7 +243,7 @@
             <br>
                 <td align="center" width="960px">
                     <center>
-                        <td><img class="rounded" style="width:960px" src="./assets/img/QLSP_definition.png"/></td>
+                        <td><img class="rounded" style="width:720px" src="./assets/img/QLSP_definition.png"/></td>
                     </center>
                 </td>
     
@@ -254,22 +254,25 @@
     </p>            
 
     <br><hr>
-    <table align="center" width="960px">
-        <center><h1>Our Contributions</h1></center>
-        <tr>
-            <td>
-                We present a novel meta-algorithmic framework that enhances the performance of existing quantum linear system solvers. Our contributions are as follows:
-
-                <ul>
-                    <li><strong>Improved Condition Number:</strong> Our method reduces the effective condition number from $\kappa$ to $\frac{\kappa (1+\eta)}{\kappa + \eta}$, where $\eta$ is a tunable parameter. This reduction leads to faster convergence and greater accuracy.</li>
-                    <li><strong>Flexibility:</strong> The proposed framework is versatile, allowing for different \texttt{QLSP\_solver}s to be used as subroutines. This flexibility enables users to choose the most appropriate solver for their specific problem.</li>
-                    <li><strong>Tunable Parameter $\eta$:</strong> By carefully selecting the parameter $\eta$, users can balance the trade-off between runtime and approximation error, optimizing overall algorithmic complexity.</li>
-                </ul>
-
-                Our approach stands out by directly approximating the solution vector $x^\star = A^{-1}b$ through iterative refinement. This is in contrast to existing methods that focus on approximating the inverse of the coefficient matrix $A$. By inverting a modified matrix $(I + \eta A)$, our algorithm effectively preconditions the system, resulting in a better-conditioned problem that converges more rapidly.
-            </td>
-        </tr>
-    </table>
+    <center>
+        <h2>
+            Our Contributions
+        </h2>
+    </center>
+    <p>
+        We present a novel meta-algorithmic framework that enhances the performance of existing quantum linear system solvers. 
+        Our contributions are as follows:
+    </p>
+        <ul>
+            <li><strong>Improved Condition Number:</strong> Our method reduces the effective condition number from $\kappa$ to $\frac{\kappa (1+\eta)}{\kappa + \eta}$, where $\eta$ is a tunable parameter. This reduction leads to faster convergence and greater accuracy.</li>
+            <li><strong>Flexibility:</strong> The proposed framework is versatile, allowing for different \texttt{QLSP\_solver}s to be used as subroutines. This flexibility enables users to choose the most appropriate solver for their specific problem.</li>
+            <li><strong>Tunable Parameter $\eta$:</strong> By carefully selecting the parameter $\eta$, users can balance the trade-off between runtime and approximation error, optimizing overall algorithmic complexity.</li>
+        </ul>
+    <p>
+        Our approach stands out by directly approximating the solution vector $x^\star = A^{-1}b$ through iterative refinement. 
+        This is in contrast to existing methods that focus on approximating the inverse of the coefficient matrix $A$. 
+        By inverting a modified matrix $(I + \eta A)$, our algorithm effectively preconditions the system, resulting in a better-conditioned problem that converges more rapidly.
+    </p>    
 
     <br><hr>
     <table align="center" width="960px">
