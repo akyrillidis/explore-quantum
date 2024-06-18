@@ -199,56 +199,59 @@
         This meta-algorithm enhances existing quantum linear system solvers by improving their dependence on the condition number, thereby broadening their applicability to more ill-conditioned problems. 
         By carefully selecting a parameter $$\eta$$, our method effectively preconditions the linear system, mitigating the bottleneck imposed by large condition numbers.
     </p>
+    
     <br><hr>
-
-    <table align="center" width="960px">
-        <center><h1>Introduction</h1></center>
-        <tr>
-            <td>
-                Solving systems of linear equations is essential in numerous applications, from scientific computing to machine learning. 
-                Classical algorithms like Gaussian elimination and iterative methods scale poorly with the problem size, often rendering large-scale problems intractable. 
-                Quantum algorithms offer a potential breakthrough by reducing the dependency on problem dimensions from polynomial to logarithmic, as demonstrated by the Harrow-Hassidim-Lloyd (HHL) algorithm. 
-                Despite this, the performance of quantum algorithms is severely impacted by the condition number $$\kappa$$ of the matrix, which measures the sensitivity of the system to numerical errors. 
-                High-condition numbers can significantly degrade the efficiency of quantum solutions, a challenge we address in this study.
-
-                Our approach leverages the classical proximal point algorithm (PPA), a method renowned for improving problem conditioning in optimization tasks. 
-                By adapting PPA to the quantum domain, we introduce a framework that enhances the performance of existing quantum linear system solvers. 
-                The key innovation lies in modifying the matrix to be inverted, thus reducing the effective condition number and improving convergence rates. 
-                This method can be seamlessly integrated with various quantum solvers, providing a versatile tool for tackling a broader class of linear system problems.
-            </td>
-        </tr>
-    </table>
-
+    <center>
+        <h2>
+            Introduction
+        </h2>
+    </center>
+    <p>
+        Solving systems of linear equations is essential in numerous applications, from scientific computing to machine learning. 
+        Classical algorithms like Gaussian elimination and iterative methods scale poorly with the problem size, often rendering large-scale problems intractable. 
+        Quantum algorithms offer a potential breakthrough by reducing the dependency on problem dimensions from polynomial to logarithmic, as demonstrated by the Harrow-Hassidim-Lloyd (HHL) algorithm. 
+        Despite this, the performance of quantum algorithms is severely impacted by the condition number $$\kappa$$ of the matrix, which measures the sensitivity of the system to numerical errors. 
+        High-condition numbers can significantly degrade the efficiency of quantum solutions, a challenge we address in this study.
+    </p>
+    <p>
+        Our approach leverages the classical proximal point algorithm (PPA), a method renowned for improving problem conditioning in optimization tasks. 
+        By adapting PPA to the quantum domain, we introduce a framework that enhances the performance of existing quantum linear system solvers. 
+        The key innovation lies in modifying the matrix to be inverted, thus reducing the effective condition number and improving convergence rates. 
+        This method can be seamlessly integrated with various quantum solvers, providing a versatile tool for tackling a broader class of linear system problems.
+    </p>
+        
     <br><hr>
-    <table align="center" width="960px">
-        <center><h1>The Quantum Linear System Problem (QLSP)</h1></center>
-        <tr>
-            <td>
-                The Quantum Linear System Problem (QLSP) aims to prepare a quantum state proportional to the solution vector $$x^\star$$ of a linear system $$Ax = b$$. 
-                This task is central to many quantum algorithms, including those for solving differential equations, machine learning, and optimization problems. 
-                Existing quantum algorithms, such as the HHL algorithm, achieve significant speedups over classical methods by reducing the complexity from polynomial to logarithmic in the problem dimension $$N$$. 
-                However, their performance is often limited by the condition number $$\kappa$$ of the matrix $$A$$.
-
-                <br>
-                The condition number $$\kappa$$ is defined as the ratio of the largest to the smallest singular value of $$A$$. 
-                High-condition numbers indicate ill-conditioned systems that are susceptible to numerical errors, which can significantly slow down convergence and reduce accuracy. 
-                Addressing this limitation is crucial for extending the applicability of quantum algorithms to real-world problems, which often involve ill-conditioned matrices.
-
-                <br>
-                A proper definition of the QLSP problem is as follows:
-
-                <br>
+    <center>
+        <h2>
+            The Quantum Linear System Problem (QLSP)
+        </h2>
+    </center>
+    <p>        
+        The Quantum Linear System Problem (QLSP) aims to prepare a quantum state proportional to the solution vector $$x^\star$$ of a linear system $$Ax = b$$. 
+        This task is central to many quantum algorithms, including those for solving differential equations, machine learning, and optimization problems. 
+        Existing quantum algorithms, such as the HHL algorithm, achieve significant speedups over classical methods by reducing the complexity from polynomial to logarithmic in the problem dimension $$N$$. 
+        However, their performance is often limited by the condition number $$\kappa$$ of the matrix $$A$$.
+    </p>
+    <p>
+        The condition number $$\kappa$$ is defined as the ratio of the largest to the smallest singular value of $$A$$. 
+        High-condition numbers indicate ill-conditioned systems that are susceptible to numerical errors, which can significantly slow down convergence and reduce accuracy. 
+        Addressing this limitation is crucial for extending the applicability of quantum algorithms to real-world problems, which often involve ill-conditioned matrices.
+    </p>
+    <p>
+       A proper definition of the QLSP problem is as follows:
+    </p>
+            <br>
                 <td align="center" width="960px">
                     <center>
                         <td><img class="rounded" style="width:960px" src="./assets/img/QLSP_definition.png"/></td>
                     </center>
                 </td>
-
-                <br>
-                Our proposed framework leverages the proximal point algorithm (PPA) to address this challenge. By iteratively refining the solution through a modified matrix inversion process, our method effectively preconditions the system, reducing the impact of high condition numbers. This approach not only improves convergence rates but also broadens the range of problems that quantum algorithms can efficiently solve.
-            </td>
-        </tr>
-    </table>
+    
+    <p>
+        Our proposed framework leverages the proximal point algorithm (PPA) to address this challenge. 
+        By iteratively refining the solution through a modified matrix inversion process, our method effectively preconditions the system, reducing the impact of high-condition numbers. 
+        This approach not only improves convergence rates but also broadens the range of problems that quantum algorithms can efficiently solve.
+    </p>            
 
     <br><hr>
     <table align="center" width="960px">
