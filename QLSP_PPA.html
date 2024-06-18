@@ -277,23 +277,46 @@
     </p>    
 
     <br><hr>
-    <table align="center" width="960px">
-        <center><h1>Algorithm and Theoretical Analysis</h1></center>
-        <tr>
-            <td>
-                Our proposed algorithm employs the proximal point algorithm (PPA) to iteratively solve the QLSP. The core idea is to invert the modified matrix \((I + \eta A)\) instead of the original matrix \(A\), thus improving the system's conditioning. The algorithm proceeds as follows:
+    <center>
+        <h2>
+            Algorithmic and Theoretical Intuition
+        </h2>
+    </center>
+    <p>
+        Our proposed algorithm employs the proximal point algorithm (PPA) to iteratively solve the QLSP. 
+        The core idea is to invert the modified matrix \((I + \eta A)\) instead of the original matrix \(A\), thus improving the system's conditioning. 
+        The algorithm proceeds as follows:        
+    </p>      
+        <ul>
+            <li><strong>Initialization:</strong> Start with an initial guess \(x_0\) for the solution vector.</li>
+            <li><strong>Matrix Modification:</strong> Modify the matrix \(A\) to \(I + \eta A\).</li>
+            <li><strong>Iterative Refinement:</strong> Apply any existing \texttt{QLSP\_solver} to invert the modified matrix and refine the solution iteratively.</li>
+        </ul>
 
-                1. **Initialization:** Start with an initial guess \(x_0\) for the solution vector.
-                2. **Matrix Modification:** Modify the matrix \(A\) to \(I + \eta A\).
-                3. **Iterative Refinement:** Apply any existing \texttt{QLSP\_solver} to invert the modified matrix and refine the solution iteratively.
+    <br>
+                <td align="center" width="960px">
+                    <center>
+                        <td><img class="rounded" style="width:720px" src="./assets/img/QLSP_algorithm.png"/></td>
+                    </center>
+                </td>
+    
+    <p>
+        The convergence rate and error bounds of our algorithm are rigorously analyzed. 
+        By carefully choosing the parameter \(\eta\), the algorithm balances the trade-off between runtime and approximation error. 
+        Our theoretical analysis demonstrates that the proposed method achieves faster convergence and greater accuracy than existing quantum solvers, especially for ill-conditioned problems.
+    </p>  
+    <p>
+        We also provide a detailed complexity analysis, showing that our method significantly reduces the dependence on the condition number $\kappa$. 
+        This improvement is quantified through a series of lemmas and theorems that establish the theoretical foundations of our approach.
+    </p>  
 
-                The convergence rate and error bounds of our algorithm are rigorously analyzed. By carefully choosing the parameter \(\eta\), the algorithm balances the trade-off between runtime and approximation error. Our theoretical analysis demonstrates that the proposed method achieves faster convergence and greater accuracy than existing quantum solvers, especially for ill-conditioned problems.
-
-                We also provide a detailed complexity analysis, showing that our method significantly reduces the dependence on the condition number $\kappa$. This improvement is quantified through a series of lemmas and theorems that establish the theoretical foundations of our approach.
-            </td>
-        </tr>
-    </table>
-
+     <br><hr>
+    <center>
+        <h2>
+            Empirical observations over theory
+        </h2>
+    </center>
+    
     <br><hr>
     <table align="center" width="960px">
         <center><h1>Conclusion and Future Work</h1></center>
