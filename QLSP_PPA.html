@@ -247,13 +247,7 @@
                     <center>
                         <td><img class="rounded" style="width:720px" src="./assets/img/QLSP_definition.png"/></td>
                     </center>
-                </td>
-    
-    <p>
-        Our proposed framework leverages the proximal point algorithm (PPA) to address this challenge. 
-        By iteratively refining the solution through a modified matrix inversion process, our method effectively preconditions the system, reducing the impact of high-condition numbers. 
-        This approach not only improves convergence rates but also broadens the range of problems that quantum algorithms can efficiently solve.
-    </p>            
+                </td>        
 
     <br><hr>
     <center>
@@ -266,7 +260,7 @@
         Our contributions are as follows:
     </p>
         <ul>
-            <li><strong>Improved Condition Number:</strong> Our method reduces the effective condition number from \(\kappa\) to \(\frac{\kappa (1+\eta)}{\kappa + \eta}\), where \(\eta\) is a tunable parameter. This reduction leads to faster convergence and greater accuracy.</li>
+            <li><strong>Improved Condition Number:</strong> Our method reduces the effective condition number from \(\kappa\) to \(\frac{\kappa (1+\eta)}{\kappa + \eta}\), where \(\eta\) is a tunable parameter. This reduction alleviates the dependence of the algorithm on the condition number, leading to faster convergence.</li>
             <li><strong>Flexibility:</strong> The proposed framework is versatile, allowing for different QLSP solvers to be used as subroutines. This flexibility enables users to choose the most appropriate solver for their specific problem.</li>
             <li><strong>Tunable Parameter \(\eta\):</strong> By carefully selecting the parameter \(\eta\), users can balance the trade-off between runtime and approximation error, optimizing overall algorithmic complexity.</li>
         </ul>
@@ -290,7 +284,7 @@
         <ul>
             <li><strong>Initialization:</strong> Start with an initial guess \(x_0\) for the solution vector.</li>
             <li><strong>Matrix Modification:</strong> Modify the matrix \(A\) to \(I + \eta A\).</li>
-            <li><strong>Iterative Refinement:</strong> Apply any existing QLSP solver to invert the modified matrix and refine the solution iteratively.</li>
+            <li><strong>Iterative Refinement:</strong> Apply any existing QLSP solver to invert the modified matrix and apply to the initial guess.</li>
         </ul>
 
     <br>
@@ -307,8 +301,7 @@
     </p>  
     <p>
         We also provide a detailed complexity analysis, showing that our method significantly reduces the dependence on the condition number \(\kappa\). 
-        This improvement is quantified through a series of lemmas and theorems that establish the theoretical foundations of our approach.
-        We urge you to check the complete and detailed theoretical analysis in our paper. 
+        Please check our paper for a complete and detailed theoretical analysis.
     </p>  
 
      <br><hr>
@@ -323,14 +316,20 @@
                         <td><img class="rounded" style="width:360px" src="./assets/img/QLSP_experiment1.png"/></td>
                     </center>
                 </td>
-
+    <p>
+        In Figure 1, we show how the query complexity scales as a function of the condition number \(\kappa$\). 
+        The orange line is the state-of-the-art QLSP solver based on the discrete adiabatic theorem. 
+        Simply by “wrapping” the original QLSP solver with our proposed method, the query complexity to achieve a fixed accuracy improves as \(\kappa\) increases.
+    </p>  
     <br>
                 <td align="center" width="960px">
                     <center>
                         <td><img class="rounded" style="width:600px" src="./assets/img/QLSP_experiment2.png"/></td>
                     </center>
                 </td>
-    
+     <p>
+         In Figure 2, we show, based on our theoretical analysis, the breakdown of the “improvement” and the “overhead” for two different QLSP solvers as subroutines.
+     </p>
      <br><hr>
     <center>
         <h2>
