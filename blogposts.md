@@ -2,4 +2,4 @@
 layout: default
 ---
 
-+ **Pluvial Flood Emulation with Hydraulics-informed Message Passing**, *Arnold Kazadi, James Doss-Gollin, Arlei Silva*, International Conference on Machine Learning (ICML), 2024.
+- [A Catalyst Framework for the Quantum Linear System Problem via the Proximal Point Algorithm](./QLSP_PPA.html).
