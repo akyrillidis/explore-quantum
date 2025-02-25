@@ -6,6 +6,7 @@ layout: default
 
 #### 2024/2025
 
++ **[Quantum EigenGame for excited state calculation](https://openreview.net/pdf?id=XFjwzut6c5)**, *David Quiroga, Jason Han, Anastasios Kyrillidis*, In the second Conference on Parsimony and Learning (CPAL), 2025.
 + **Modeling and Simulating Rydberg Atom Quantum Computers for Hardware-Software Co-design with PachinQo**, *Jason Zev Ludmir, Yuqian Huo, Nicholas S. DiBrita, and Tirthak Patel*, ACM International SIGMETRICS Conference (SIGMETRICS 2025)
 + **ReCon: Reconfiguring Analog Rydberg Atom Quantum Computers for Quantum Generative Adversarial Networks**, *Nicholas S. DiBrita, Daniel Leeds, Yuqian Huo, Jason Zev Ludmir, and Tirthak Patel*, IEEE/ACM International Conference on Computer Aided Design (ICCAD 2024)
 + **PARALLAX: A Compiler for Neutral Atom Quantum Computers under Hardware Constraints**, *Jason Zev Ludmir and Tirthak Patel*, ACM/IEEE International Conference on High-Performance Computing, Networking, Storage and Analysis (SC 2024)
