@@ -252,6 +252,11 @@
 <p>
     \( \textcolor{blue}{\langle\psi(\theta^{(r)})|M|\psi(\theta^{(r)})\rangle} - \textcolor{red}{\sum_{j \le r} \tfrac{\langle \psi(\theta^{(r)})| M |\psi(\theta^{(j)})\rangle^2}{\langle \psi(\theta^{(j)})| M |\psi(\theta^{(j)})\rangle}} \)
 </p>
+<td align="center" width="960px">
+    <center>
+        <td><img class="rounded" style="width:500px" src="./assets/img/qeig_algo1.png"/></td>
+    </center>
+</td>
 <p>
     The \(\textcolor{blue}{\text{blue}}\) term maximizes the variance along the vector being optimized, while the \(\textcolor{red}{\text{red}}\) term penalizes alignment with previously optimized vectors, ensuring orthogonality implicitly.
 </p>
@@ -259,11 +264,19 @@
 <p>
     To implement this in a quantum setting, we developed a method to compute terms of the form \(\langle \psi(\theta^{(r)})| M |\psi(\theta^{(j)})\rangle\) using interference between quantum states. Our implementation requires only one additional qubit and two quantum oracle calls, making it efficient for near-term quantum devices.
 </p>
-
+<td align="center" width="960px">
+    <center>
+        <td><img class="rounded" style="width:500px" src="./assets/img/qeig_system.png"/></td>
+    </center>
+</td>
 <p>
     Our theoretical analysis establishes convergence guarantees for both the 0th-order classical EigenGame (using finite differences) and the parameterized Quantum EigenGame. We also analyze error accumulation rates, showing that both methods are robust to small errors in parent eigenvectors, with error proportional to \(\mathcal{O}(\epsilon)\) for the 0th-order case and \(\mathcal{O}(\epsilon \sqrt{\ell q})\) for the parameterized case (where \(\ell\) is the number of layers and \(q\) is the number of qubits).
 </p>  
-
+<td align="center" width="960px">
+    <center>
+        <td><img class="rounded" style="width:500px" src="./assets/img/qeig_theory.png"/></td>
+    </center>
+</td>
  <br><hr>
 <center>
     <h2>
@@ -271,11 +284,6 @@
     </h2>
 </center>
  <br>
-            <td align="center" width="960px">
-                <center>
-                    <td><img class="rounded" style="width:500px" src="./assets/img/QLSP_experiment1.png"/></td>
-                </center>
-            </td>
 <p>
     Our experiments focused on characterizing the energy levels of the H₂ molecule. We compared our Quantum EigenGame approach with the Variational Quantum Deflation (VQD) algorithm, both in noiseless and noisy settings. VQD aims to optimize a similar objective but requires a regularization parameter \(\beta\) that needs careful tuning.
 </p>
@@ -283,14 +291,20 @@
     Results show that Quantum EigenGame achieves comparable or better convergence rates and accuracy than VQD, especially without requiring extensive hyperparameter tuning. This makes our approach more practical for real quantum computing applications. Even in the presence of statistical shot noise (a major source of errors in quantum computation), our method maintains robust performance.
 </p>  
 <br>
-            <td align="center" width="960px">
-                <center>
-                    <td><img class="rounded" style="width:500px" src="./assets/img/QLSP_experiment2.png"/></td>
-                </center>
-            </td>
+<td align="center" width="960px">
+    <center>
+        <td><img class="rounded" style="width:500px" src="./assets/img/qeig_experiments1.png"/></td>
+    </center>
+</td>
  <p>
      We also conducted ablation studies on the 0th-order EigenGame, comparing the number of iterations required to accurately estimate eigenvalues against the exact EigenGame across different dimensionalities. The similar scaling trend observed suggests that despite numerical errors being introduced, correct eigenvalues can still be found efficiently.
  </p>
+<td align="center" width="960px">
+    <center>
+        <td><img class="rounded" style="width:500px" src="./assets/img/qeig_experiments2.png"/></td>
+    </center>
+</td>
+
  <br><hr>
 <center>
     <h2>
@@ -320,5 +334,7 @@
     <p>This research was funded in part by: The Robert A. Welch Foundation (grant No. C-2118); Rice University (Faculty Initiative award); NSF FET:Small (award no. 1907936); NSF CMMI (award no. 2037545); NSF CAREER (award no. 2145629); a Rice InterDisciplinary Excellence Award (IDEA); an Amazon Research Award; a Microsoft Research Award. AK would also like to thank the Ken Kennedy Institute for its support through the Research Cluster "QuanTAS".</p>
 </center>
 <br>
+    <br>
+    <br>
 
-</>body>
+</body>
