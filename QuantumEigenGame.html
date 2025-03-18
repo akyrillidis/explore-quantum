@@ -132,12 +132,12 @@
     <tr>
         <td align="center" width="160px">
             <center>
-                <span style="font-size:16px"><a href="#">David Quiroga</a><sup>1</sup></span>
+                <span style="font-size:16px"><a href="mailto:daq3@rice.edu">David Quiroga</a><sup>1</sup></span>
             </center>
         </td>
         <td align="center" width="160px">
             <center>
-                <span style="font-size:16px"><a href="#">Jason Han</a><sup>1</sup></span>
+                <span style="font-size:16px"><a href="mailto:jh146@rice.edu">Jason Han</a><sup>1</sup></span>
             </center>
         </td>
         <td align="center" width="160px">
@@ -152,7 +152,7 @@
     <tr>            
         <td align="center" width="350px">
             <center>
-                <span style="font-size:16px"><sup>1</sup>Rice University</span>
+                <span style="font-size:16px"><sup>1</sup>Computer Science, Rice University and Ken Kennedy Institute (K2I)</span>
             </center>
         </td>
     </tr>
@@ -173,19 +173,12 @@
             <center>
                 <br>
                 <span style="font-size:20px">
-                    Paper <a href="#"> [arXiv]</a>
+                    Paper <a href=""> [arXiv]</a>
                 </span>
             </center>
         </td>            
     </tr>
 </table>
-
-<br>
-<td align="center" width="960px">
-    <center>
-        <td><img class="rounded" style="width:720px" src="./assets/img/QLSP_table.png"/></td>
-    </center>
-</td>
 
 <br><hr>
 <center>
@@ -213,7 +206,7 @@
 <br><hr>
 <center>
     <h2>
-        The Quantum Linear System Problem (QLSP)
+        The Variational Quantum Eigensolver (VQE) problem
     </h2>
 </center>
 <p>        
@@ -257,7 +250,7 @@
     The core of our approach is the EigenGame utility function that the \(r\)-th "player" seeks to maximize:
 </p>      
 <p>
-    \( \textcolor{blue}{\langle\psi(\theta^{(r)})|M|\psi(\theta^{(r)})\rangle} - \textcolor{red}{\sum_{j<r} \tfrac{\langle \psi(\theta^{(r)})| M |\psi(\theta^{(j)})\rangle^2}{\langle \psi(\theta^{(j)})| M |\psi(\theta^{(j)})\rangle}} \)
+    \( \textcolor{blue}{\langle\psi(\theta^{(r)})|M|\psi(\theta^{(r)})\rangle} - \textcolor{red}{\sum_{j \le r} \tfrac{\langle \psi(\theta^{(r)})| M |\psi(\theta^{(j)})\rangle^2}{\langle \psi(\theta^{(j)})| M |\psi(\theta^{(j)})\rangle}} \)
 </p>
 <p>
     The \(\textcolor{blue}{\text{blue}}\) term maximizes the variance along the vector being optimized, while the \(\textcolor{red}{\text{red}}\) term penalizes alignment with previously optimized vectors, ensuring orthogonality implicitly.
