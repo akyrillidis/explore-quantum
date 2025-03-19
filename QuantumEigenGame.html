@@ -165,7 +165,7 @@
             <center>
                 <br>
                 <span style="font-size:20px">Code
-                    <a href=""> [GitHub]</a>
+                    <a href="https://github.com/Raijeku/quantum-eigengame"> [GitHub]</a>
                 </span>
             </center>
         </td>
@@ -173,7 +173,7 @@
             <center>
                 <br>
                 <span style="font-size:20px">
-                    Paper <a href=""> [arXiv]</a>
+                    Paper <a href="https://arxiv.org/pdf/2503.13644"> [arXiv]</a>
                 </span>
             </center>
         </td>            
@@ -218,7 +218,7 @@
     where \(|\psi(\theta)\rangle\) is a quantum state parameterized by variables \(\theta\), and \(U_i(\theta_i)\) represents a layer of an ansatz, repeated \(\ell\) times. The goal is to optimize these parameters to find states that minimize or maximize the expectation value of the Hamiltonian.
 </p>
 <p>
-   Existing literature on excited states often uses implicit deflation algorithms that change the VQE objective to favor orthogonal solutions. Our work explores a novel approach based on game theory that avoids these deflation steps entirely.
+   Existing literature on excited states often uses implicit deflation algorithms that change the VQE objective to favor orthogonal solutions. Our work explores a novel approach based on game theory that exploits implicit deflation in a different way.
 </p>
 
 <br><hr>
@@ -231,7 +231,7 @@
     We present Quantum EigenGame, a novel approach to finding excited states that offers several advantages:
 </p>
     <ul>
-        <li><strong>Deflation-Free Algorithm:</strong> Our method computes excited states without requiring explicit or implicit deflation steps, leading to more efficient computations.</li>
+        <li><strong>Deflation-Free Algorithm:</strong> Our method computes excited states without requiring explicit deflation steps, leading to more efficient computations.</li>
         <li><strong>Game-Theoretic Formulation:</strong> By posing eigenvalue calculation as a competitive game, we enable "players" to find distinct eigenvectors simultaneously or sequentially.</li>
         <li><strong>Theoretical Guarantees:</strong> We provide rigorous convergence proofs for both classical 0th-order EigenGame and parameterized Quantum EigenGame, establishing robust error bounds.</li>
         <li><strong>Quantum Implementation:</strong> We develop efficient quantum circuits to compute the required expectation values using minimal additional quantum resources.</li>
