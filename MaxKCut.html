@@ -192,7 +192,7 @@ Experimentally, our Rank-1 algorithm achieves up to a <strong>74&times; speedup<
 <p>
 Partitioning a network into groups to maximize cross-group connections arises everywhere: circuit layout, social network analysis, clustering, and even quantum computing benchmarks.
 <strong>Max-3-Cut</strong>&mdash;splitting a graph's vertices into three sets to maximize cut edges&mdash;is NP-hard, and the best-known polynomial-time approximation ratio of 0.836 comes from semidefinite programming (SDP).
-But SDP solvers are expensive (at least \(\mathcal{O}(n^{3.5})\)) and hard to parallelize, while heuristic methods like genetic algorithms lack provable guarantees.
+SDP solvers are expensive (at least \(\mathcal{O}(n^{3.5})\)) and more importantly hard to parallelize, while heuristic methods like genetic algorithms lack provable guarantees.
 </p>
 <p>
 Our key insight is simple: many real-world graphs have Laplacians whose spectra decay rapidly, meaning most of the "cut information" lives in a few top eigenvalues.
