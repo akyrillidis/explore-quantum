@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What Can 15 Obsolete GPUs Do for Combinatorial Optimization?</title>
+<meta property="og:title" content="What Can 15 Obsolete GPUs Do for Combinatorial Optimization?" />
+<meta property="og:description" content="Exploiting low-rank structure in Max-3-Cut with commodity parallel hardware — 15 NVIDIA P100 GPUs across 4 machines." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="What Can 15 Obsolete GPUs Do for Combinatorial Optimization?" />
+<meta name="twitter:description" content="Exploiting low-rank structure in Max-3-Cut with commodity parallel hardware." />
+<meta name="keywords" content="Max-3-Cut, Max-K-Cut, combinatorial optimization, low-rank, GPU, parallel computing, SDP, graph partitioning, NVIDIA P100" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Source+Sans+Pro:wght@400;600;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+    font-family: 'Source Serif Pro', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.7;
+    color: #222;
+    background: #fff;
+    margin: 0; padding: 0;
+}
+.container {
+    max-width: 912px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+@media screen and (max-width: 1000px) {
+    .container { max-width: 95%; padding: 0 12px; }
+    body { font-size: 15px; }
+}
+
+/* ===== TYPOGRAPHY ===== */
+h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.3;
+}
+h1 { font-size: 2.2em; margin-top: 0; }
+h2 { font-size: 1.6em; margin-top: 2.5em; border-bottom: 2px solid #648FFF; padding-bottom: 6px; }
+h3 { font-size: 1.2em; margin-top: 1.8em; color: #333; }
+p { margin: 1em 0; }
+a { color: #648FFF; text-decoration: none; }
+a:hover { color: #785EF0; text-decoration: underline; }
+code, .mono {
+    font-family: 'Fira Mono', monospace;
+    font-size: 0.85em;
+    background: #f4f4f8;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid #e0e0e0;
+}
+pre {
+    background: #f4f4f8;
+    border: 1px solid #d0d0d8;
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    line-height: 1.5;
+}
+pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.82em;
+}
+blockquote {
+    border-left: 4px solid #648FFF;
+    margin: 1.5em 0;
+    padding: 0.5em 1em;
+    background: #f8f9ff;
+    color: #444;
+}
+strong { font-weight: 600; }
+
+/* ===== HERO / TITLE ===== */
+.hero {
+    text-align: center;
+    padding: 60px 0 30px;
+}
+.hero h1 {
+    font-size: 2.4em;
+    margin-bottom: 0.3em;
+    color: #1a1a1a;
+}
+.hero .subtitle {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1.15em;
+    color: #555;
+    font-weight: 400;
+    margin-bottom: 1.2em;
+    font-style: italic;
+}
+.hero .authors {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1.0em;
+    color: #333;
+    margin-bottom: 0.3em;
+}
+.hero .affiliation {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 1em;
+}
+.hero .date {
+    font-size: 0.9em;
+    color: #888;
+    margin-bottom: 1em;
+}
+.hero .links a {
+    display: inline-block;
+    margin: 0 12px;
+    padding: 8px 20px;
+    background: #648FFF;
+    color: #fff;
+    border-radius: 5px;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 600;
+    font-size: 0.95em;
+    transition: background 0.2s;
+}
+.hero .links a:hover {
+    background: #785EF0;
+    text-decoration: none;
+}
+
+/* ===== SECTION DIVIDERS ===== */
+hr.section-divider {
+    border: 0;
+    height: 1px;
+    background-image: linear-gradient(to right, rgba(100,143,255,0), rgba(100,143,255,0.6), rgba(100,143,255,0));
+    margin: 3em 0 1em;
+}
+
+/* ===== TABLES ===== */
+table.hw-table, table.results-tbl {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.5em 0;
+    font-size: 0.9em;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+table.hw-table th, table.hw-table td,
+table.results-tbl th, table.results-tbl td {
+    border: 1px solid #d0d0d8;
+    padding: 8px 12px;
+    text-align: center;
+}
+table.hw-table th, table.results-tbl th {
+    background: #f0f2ff;
+    font-weight: 600;
+    color: #333;
+}
+table.results-tbl th.sortable { cursor: pointer; user-select: none; }
+table.results-tbl th.sortable:hover { background: #dde0ff; }
+table.results-tbl tr:nth-child(even) { background: #fafbff; }
+table.results-tbl td.winner { background: #d4edda; font-weight: 600; }
+table.results-tbl td.faster-than-sdp { background: #dce8ff; }
+table.results-tbl td.running {
+    color: #888;
+    font-style: italic;
+    background: #fff8e1;
+}
+
+/* ===== INTERACTIVE CONTAINERS ===== */
+.interactive-box {
+    border: 1px solid #d0d0d8;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 2em 0;
+    background: #fafbff;
+}
+.interactive-box .box-title {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 700;
+    font-size: 1.05em;
+    color: #648FFF;
+    margin-bottom: 12px;
+}
+.interactive-box .caption {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 10px;
+    text-align: center;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+/* ===== FILTER BUTTONS ===== */
+.filter-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+.filter-btn {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.85em;
+    padding: 5px 14px;
+    border: 1px solid #648FFF;
+    border-radius: 20px;
+    background: #fff;
+    color: #648FFF;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.filter-btn:hover, .filter-btn.active {
+    background: #648FFF;
+    color: #fff;
+}
+
+/* ===== TOGGLE BUTTON ===== */
+.toggle-btn {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.9em;
+    padding: 8px 20px;
+    border: 2px solid #785EF0;
+    border-radius: 25px;
+    background: #fff;
+    color: #785EF0;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: block;
+    margin: 16px auto;
+}
+.toggle-btn:hover {
+    background: #785EF0;
+    color: #fff;
+}
+
+/* ===== SLIDER ===== */
+.slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.9em;
+}
+.slider-row input[type=range] {
+    flex: 1;
+    accent-color: #648FFF;
+}
+.slider-row .slider-val {
+    font-family: 'Fira Mono', monospace;
+    font-weight: 600;
+    min-width: 50px;
+    text-align: right;
+}
+
+/* ===== GPU CLUSTER DIAGRAM ===== */
+.cluster-diagram {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+}
+.machine-box {
+    border: 2px solid #648FFF;
+    border-radius: 10px;
+    padding: 12px;
+    width: 160px;
+    text-align: center;
+    background: #fff;
+    transition: border-color 0.3s;
+}
+.machine-box.bottleneck { border-color: #DC267F; }
+.machine-box .machine-name {
+    font-family: 'Fira Mono', monospace;
+    font-weight: 500;
+    font-size: 0.85em;
+    margin-bottom: 6px;
+    color: #333;
+}
+.machine-box .machine-arch {
+    font-size: 0.75em;
+    color: #888;
+    margin-bottom: 8px;
+}
+.gpu-icons {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+.gpu-icon {
+    width: 28px; height: 20px;
+    background: #648FFF;
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fira Mono', monospace;
+    font-size: 0.55em;
+    color: #fff;
+    font-weight: 700;
+}
+.progress-bar-bg {
+    width: 100%;
+    height: 14px;
+    background: #e8e8f0;
+    border-radius: 7px;
+    overflow: hidden;
+}
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 7px;
+    transition: width 0.8s ease, background 0.3s;
+}
+.machine-box .work-label {
+    font-family: 'Fira Mono', monospace;
+    font-size: 0.7em;
+    color: #555;
+    margin-top: 4px;
+}
+
+/* ===== RADAR CHART ===== */
+.radar-legend {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.85em;
+}
+.radar-legend-item {
+    display: flex; align-items: center; gap: 5px; cursor: pointer;
+}
+.radar-legend-swatch {
+    width: 14px; height: 14px; border-radius: 3px;
+}
+
+/* ===== SCALING PLOT ===== */
+.legend-toggle {
+    display: flex; gap: 12px; justify-content: center;
+    flex-wrap: wrap; margin-bottom: 8px;
+    font-family: 'Source Sans Pro', sans-serif; font-size: 0.85em;
+}
+.legend-toggle label { cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.legend-toggle input { accent-color: #648FFF; }
+
+/* ===== BIBTEX ===== */
+.bibtex-block {
+    background: #f4f4f8;
+    border: 1px solid #d0d0d8;
+    border-radius: 6px;
+    padding: 16px;
+    font-family: 'Fira Mono', monospace;
+    font-size: 0.78em;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+/* ===== FOOTER ===== */
+.footer {
+    text-align: center;
+    padding: 40px 0;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.85em;
+    color: #888;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 3em;
+}
+
+/* ===== MATH DISPLAY ===== */
+.math-block {
+    overflow-x: auto;
+    padding: 8px 0;
+}
+
+/* ===== NOSCRIPT ===== */
+noscript .static-fallback {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- SECTION 0: TITLE / HERO                                      -->
+<!-- ============================================================ -->
+<div class="container">
+<div class="hero">
+    <h1>What Can 15 Obsolete GPUs Do for Combinatorial Optimization?</h1>
+    <div class="subtitle">Exploiting low-rank structure in Max-3-Cut with commodity parallel hardware</div>
+    <div class="authors">
+        Ria Stevens, Fangshuo Liao, Barbara Su, Jianqiang Li, Anastasios Kyrillidis
+    </div>
+    <div class="affiliation">Computer Science Department, Rice University</div>
+    <div class="date">March 2026</div>
+    <div class="links">
+        <a href="https://arxiv.org/pdf/2602.20376">Paper</a>
+        <a href="https://github.com/barbara-su/max-k-cut-parallel">Code</a>
+    </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 1: THE HOOK                                          -->
+<!-- ============================================================ -->
+<h2>1. The Hook: 15 GPUs Nobody Wants</h2>
+
+<p>
+In the Rice University Data Center, there sit four machines that most researchers would rather forget about. Between them they hold <strong>15 NVIDIA P100 GPUs</strong> &mdash; the Pascal-generation accelerators that launched in 2016. No tensor cores. No BF16 support. Two of the machines run PowerPC ppc64le, meaning half the Python ecosystem quietly refuses to install. The newest GPU in this collection is nearly a decade old.
+</p>
+
+<p>
+Our question was simple: <em>can these obsolete machines, working together, solve hard combinatorial optimization problems competitively?</em> The answer turns out to be yes &mdash; but only if you pick an algorithm that matches what the hardware can actually do. Instead of running a monolithic SDP solver on a single expensive node, we exploit the low-rank structure of quadratic problems to decompose the problem into millions of independent candidate evaluations. Each evaluation is a tiny matrix operation &mdash; exactly the workload a P100 was designed for.
+</p>
+
+<table class="hw-table">
+<tr>
+    <th>Machine</th>
+    <th>GPUs</th>
+    <th>Architecture</th>
+    <th>RAM</th>
+    <th>Notes</th>
+</tr>
+<tr>
+    <td><code>anton.k0</code></td>
+    <td>4 &times; P100-SXM2 (16 GB)</td>
+    <td>x86_64</td>
+    <td>251 GB</td>
+    <td>Coordinator node</td>
+</tr>
+<tr>
+    <td><code>anton.k1</code></td>
+    <td>4 &times; P100-SXM2 (16 GB)</td>
+    <td>x86_64</td>
+    <td>125 GB</td>
+    <td>Reliable</td>
+</tr>
+<tr>
+    <td><code>kp001</code></td>
+    <td>4 &times; Tesla P100 (16 GB)</td>
+    <td>ppc64le</td>
+    <td>256 GB</td>
+    <td>PowerPC &mdash; limited package support</td>
+</tr>
+<tr>
+    <td><code>kp002</code></td>
+    <td>3 &times; Tesla P100 (16 GB)</td>
+    <td>ppc64le</td>
+    <td>256 GB</td>
+    <td>Salvage machine, power-capped at 220W</td>
+</tr>
+</table>
+
+<p>
+The result: our Rank-2 algorithm running across all 15 GPUs <strong>matches or exceeds</strong> SDP solution quality on quadratic form maximization, as in MaxCUT instances, while running 1.5&ndash;3&times; faster. On torus graphs, it finds the provably optimal cut value every single time. And the total hardware cost? These machines were headed for e-waste.
+</p>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 2: MAX-3-CUT PROBLEM                                 -->
+<!-- ============================================================ -->
+<h2>2. The Max-3-Cut Problem</h2>
+
+<p>
+Given an undirected graph \(G = (V, E)\) with \(n\) vertices, the <strong>Max-3-Cut</strong> problem asks: partition the vertices into three groups \(S_1, S_2, S_3\) to maximize the number of edges with endpoints in different groups. If you think of each group as a color, you want to color vertices so that as many edges as possible connect differently-colored vertices.
+</p>
+
+<p>
+This is equivalent to maximizing the Hamiltonian
+</p>
+<div class="math-block">
+\[
+\text{Max-3-Cut}(G) = \max_{z \in \{1, \omega, \omega^2\}^n} \; \frac{1}{3} \, z^\dagger Q \, z
+\]
+</div>
+<p>
+where \(\omega = e^{2\pi i/3}\) is a primitive cube root of unity, and \(Q\) is derived from the graph Laplacian \(L\):
+</p>
+<div class="math-block">
+\[
+Q = \frac{3}{2}\left(D - \frac{1}{3}A - \frac{2}{3}D\right) = D - \frac{1}{2}A
+\]
+</div>
+<p>
+Here \(A\) is the adjacency matrix and \(D\) is the degree matrix. Each vertex \(i\) is assigned a label \(z_i \in \{1, \omega, \omega^2\}\) corresponding to one of three groups. When two adjacent vertices have different labels, their contribution \(\frac{1}{3}(1 - \text{Re}(\bar{z}_i z_j))\) equals 1 if they are in different groups and 0 if they are in the same group.
+</p>
+
+<h3>Why is it hard?</h3>
+<p>
+Max-3-Cut is <strong>NP-hard</strong>. The best polynomial-time approximation ratio known is 0.836, achieved via semidefinite programming (SDP) relaxation followed by hyperplane rounding. The SDP approach lifts the problem into a space of \(n \times n\) positive semidefinite matrices, solves a convex relaxation, and then rounds the solution back to a discrete assignment. This gives excellent solution quality, but the cost is steep: interior-point SDP solvers run in \(\mathcal{O}(n^{3.5})\) time and require \(\mathcal{O}(n^2)\) memory, and they are inherently sequential.
+</p>
+
+<h3>Why does it matter?</h3>
+<p>
+Max-\(K\)-Cut problems arise throughout engineering and science. In <strong>VLSI circuit design</strong>, partitioning circuit components minimizes inter-partition wiring. In <strong>machine learning</strong>, spectral clustering reduces to a relaxed Max-\(K\)-Cut. In <strong>quantum computing</strong>, Max-3-Cut is a standard benchmark for the Quantum Approximate Optimization Algorithm (QAOA), and classical solvers provide the baselines that quantum devices must beat. Finding faster classical methods raises the bar for quantum advantage claims.
+</p>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 3: THE LOW-RANK IDEA                                 -->
+<!-- ============================================================ -->
+<h2>3. The Low-Rank Idea</h2>
+
+<p>
+Let \(Q = \sum_{j=1}^n \lambda_j v_j v_j^\dagger\) be the eigendecomposition of the objective matrix, with eigenvalues sorted in decreasing order. If the top \(r\) eigenvalues capture most of the spectral energy &mdash; that is, \(\sum_{j=1}^r \lambda_j \approx \sum_{j=1}^n \lambda_j\) &mdash; then we can approximate \(Q \approx Q_r = \sum_{j=1}^r \lambda_j v_j v_j^\dagger\) and solve the optimization over the low-rank approximation instead.
+</p>
+
+<h3>Rank-1: Phase sweep</h3>
+<p>
+When \(r = 1\), the objective becomes \(z^\dagger (\lambda_1 v_1 v_1^\dagger) z = \lambda_1 |v_1^\dagger z|^2\). Each vertex \(i\) contributes through its eigenvector component \(v_{1,i}\), which has some angle \(\theta_i\) in the complex plane. The optimal assignment is determined by how a global phase shift \(\varphi\) aligns these angles with the three sectors corresponding to \(\{1, \omega, \omega^2\}\).
+</p>
+
+<p>
+The algorithm sweeps \(\varphi\) over a discrete set of \(n+1\) candidate values &mdash; one for each angle boundary where a vertex's assignment could change. For each candidate \(\varphi\), we evaluate the cut value in \(O(n)\) time. The total cost is \(O(n^2)\) for the sweep plus \(O(n)\) for the eigenvector computation (via Lanczos iteration).
+</p>
+
+
+<h3>Rank-2: Hypersurface arrangements</h3>
+<p>
+When \(r = 2\), the objective is \(z^\dagger Q_2 z = \lambda_1 |v_1^\dagger z|^2 + \lambda_2 |v_2^\dagger z|^2\). Now each vertex \(i\) is described by a <em>pair</em> of angles \((\theta_{1,i}, \theta_{2,i})\) from the two eigenvectors. The decision boundaries become curves in a two-dimensional parameter space rather than points on a circle.
+</p>
+
+<p>
+The structure is <strong>embarrassingly parallel</strong>: each candidate can be evaluated independently. With \(P\) processors, the wall-clock time drops by dividing the work by \(1/P\). And crucially, the algorithm is <em>exact</em> for rank-2 matrices &mdash; the candidate set is guaranteed to contain the global maximizer.
+</p>
+
+<h3>When does low-rank work?</h3>
+<p>
+The quality of the low-rank approximation depends on the <strong>spectral energy ratio</strong> \(\rho_r = 1 - \sum_{j=1}^r \lambda_j / \sum_{j=1}^n \lambda_j\), which measures the fraction of spectral energy <em>not</em> captured by the top \(r\) eigenvalues. Our theory guarantees a multiplicative approximation factor of \((1 - \epsilon)\) where \(\epsilon\) depends on \(\rho_r\) and the perturbation structure.
+</p>
+
+
+<div class="interactive-box" id="spectral-box">
+    <div class="box-title">Interactive: Spectral Energy Thermometer</div>
+    <div id="spectral-charts" style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;"></div>
+    <div class="slider-row">
+        <span>Rank \(r\):</span>
+        <input type="range" id="rank-slider" min="1" max="10" value="2" step="1">
+        <span class="slider-val" id="rank-val">r = 2</span>
+    </div>
+    <div id="energy-readout" style="text-align:center; font-family:'Fira Mono',monospace; font-size:0.9em; margin-top:6px;"></div>
+    <div class="caption">
+        Bar charts show the top-10 eigenvalues of representative graphs from each family. Blue bars are included at the current rank \(r\); gray bars are excluded. The energy percentage shows how much of the total spectral energy is captured.
+    </div>
+    <noscript><div class="static-fallback">Spectral thermometer requires JavaScript.</div></noscript>
+</div>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 4: ENGINEERING                                       -->
+<!-- ============================================================ -->
+<h2>4. Engineering for Heterogeneous Hardware</h2>
+
+<p>
+The Rank-2 algorithm generates a polynomial number of candidate solutions that must each be evaluated. This number would take a single CPU core a lot of time, sometimes a couple of years even for graphs of \(n = 1000\) nodes. But each evaluation is a dot product of length \(n\), and dot products are exactly what GPUs were built for. The challenge is not the computation per candidate; it is orchestrating millions of parallel evaluations across 15 GPUs on 4 machines connected by a campus network.
+</p>
+
+<h3>Why not Ray? Why not Triton?</h3>
+<p>
+Our first instinct was to use <a href="https://ray.io">Ray</a> for distributed task scheduling. Ray is elegant and well-documented &mdash; and it does not build on ppc64le (the PowerPC architecture running on kp001 and kp002). We also considered <a href="https://triton-lang.org">Triton</a> for custom GPU kernels, but Triton requires CUDA compute capability 7.0+, and the P100 is stuck at 6.0. We were left with the most portable tool in the PyTorch ecosystem: <code>torch.multiprocessing</code>.
+</p>
+
+<h3>The worker design</h3>
+<p>
+Each machine runs a <code>worker.py</code> process that receives its assigned slice of the candidate space via SSH, computes the cut values on its local GPUs using batched matrix operations, and writes the best result to a shared NFS directory. The coordinator on <code>anton.k0</code> launches workers, monitors output files, and aggregates results. There is no inter-worker communication during execution &mdash; pure embarrassing parallelism.
+</p>
+
+<h3>Throughput-proportional splitting</h3>
+<p>
+The naive approach is to split candidates equally: each of the 15 GPUs gets 1/15 of the work. But our GPUs are not equal. The x86 machines (anton.k0, anton.k1) achieve roughly 20% higher throughput than the PowerPC machines (kp001, kp002), partly due to faster host-device transfer and partly due to better-optimized CUDA libraries. Equal splitting means the x86 machines finish early and sit idle while the PowerPC machines grind through their oversized share.
+</p>
+
+<p>
+The fix is simple: <strong>benchmark each GPU</strong> with a small calibration batch (1000 candidates, ~2 seconds) before the main run, then split work proportional to measured throughput. This one change reduced our wall-clock time by <strong>10.3&times;</strong> on a 750-node instance &mdash; the difference between 53 minutes and 5.1 minutes. The interactive diagram below shows the effect.
+</p>
+
+<div class="interactive-box" id="cluster-box">
+    <div class="box-title">Interactive: GPU Cluster Work Distribution</div>
+    <button class="toggle-btn" id="split-toggle">Show: Throughput-Proportional Splitting</button>
+    <div class="cluster-diagram" id="cluster-diagram"></div>
+    <div id="cluster-speedup" style="text-align:center; font-family:'Fira Mono',monospace; font-size:0.9em; margin-top:12px; color:#333;"></div>
+    <div class="caption">
+        Click the button to toggle between equal and throughput-proportional work distribution. Red borders indicate bottleneck machines. Progress bars show relative workload.
+    </div>
+    <noscript><div class="static-fallback">GPU cluster diagram requires JavaScript.</div></noscript>
+</div>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 5: RESULTS                                           -->
+<!-- ============================================================ -->
+<h2>5. Results</h2>
+
+<p>
+We tested four methods on three graph families (3-regular, torus lattice, stochastic block model) at six sizes (\(n \in \{250, 500, 750, 1000, 1250, 1500\}\)), with three random seeds each &mdash; 54 instances in total. The methods are:
+</p>
+<ul>
+    <li><strong>Rank-2 (15 GPU)</strong> &mdash; our low-rank algorithm on all 15 P100s</li>
+    <li><strong>Greedy</strong> &mdash; iterative improvement starting from a random assignment</li>
+    <li><strong>Random</strong> &mdash; best of 10,000 uniform random assignments</li>
+    <li><strong>SDP</strong> &mdash; CVXPY with the SCS solver, run on a single x86 machine</li>
+</ul>
+
+<p>
+All Rank-2 runs used throughput-proportional splitting across 15 GPUs.
+</p>
+
+<div class="interactive-box" id="results-table-box">
+    <div class="box-title">Sortable Results Table</div>
+    <div class="filter-bar" id="family-filters">
+        <button class="filter-btn active" data-family="all">All</button>
+        <button class="filter-btn" data-family="regular">3-Regular</button>
+        <button class="filter-btn" data-family="torus">Torus</button>
+        <button class="filter-btn" data-family="sbm">SBM</button>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="results-tbl" id="results-table">
+            <thead>
+                <tr>
+                    <th class="sortable" data-col="family">Family</th>
+                    <th class="sortable" data-col="n">n</th>
+                    <th class="sortable" data-col="seed">Seed</th>
+                    <th class="sortable" data-col="rank2_score">Rank-2 Score</th>
+                    <th class="sortable" data-col="rank2_time">Rank-2 Time (s)</th>
+                    <th class="sortable" data-col="greedy_score">Greedy Score</th>
+                    <th class="sortable" data-col="greedy_time">Greedy Time (s)</th>
+                    <th class="sortable" data-col="random_score">Random Score</th>
+                    <th class="sortable" data-col="sdp_score">SDP Score</th>
+                    <th class="sortable" data-col="sdp_time">SDP Time (s)</th>
+                </tr>
+            </thead>
+            <tbody id="results-tbody"></tbody>
+        </table>
+    </div>
+    <div class="caption">
+        Click column headers to sort. Use the filter buttons to show a single graph family. Green cells indicate the highest score for each instance. Light blue cells highlight the faster method between Rank-2 and SDP.
+    </div>
+    <noscript><div class="static-fallback">Sortable table requires JavaScript.</div></noscript>
+</div>
+
+<h3>Key findings</h3>
+
+<p>
+<strong>Torus graphs:</strong> Rank-2 matches SDP perfectly at every size tested, consistently achieving the optimal cut value. This is expected &mdash; torus Laplacians have extremely concentrated spectra (top-2 eigenvalues capture &gt;99% of energy), so the rank-2 approximation is nearly exact. At \(n = 1008\), Rank-2 on 15 GPUs runs in 1,535s compared to SDP's 1,581s &mdash; comparable speed but with the advantage of easy parallelization to more machines.
+</p>
+
+<p>
+<strong>3-Regular graphs:</strong> Rank-2 beats or matches SDP on instances with \(n \geq 1000\). At \(n = 1000\), the average Rank-2 score (7,043) exceeds the average SDP score (7,030). The gap widens at \(n = 1500\), where Rank-2 averages 10,548 versus SDP's 10,494 &mdash; a modest but consistent advantage. This is noteworthy because regular graphs are not as spectrally concentrated as torus graphs, yet the low-rank approximation still captures enough structure to be competitive.
+</p>
+
+<p>
+<strong>SBM (Stochastic Block Model):</strong> Here we must be honest &mdash; Rank-2 underperforms. On SBM graphs, Greedy consistently achieves the highest cut values, followed by SDP, with Rank-2 typically 5&ndash;7% below the best. The reason is clear from the spectral energy ratios: SBM graphs have relatively flat spectra, so the top-2 eigenvalues capture only a small fraction of the total energy. Low-rank methods simply cannot see enough of the graph structure.
+</p>
+
+<div class="interactive-box" id="scaling-box">
+    <div class="box-title">Interactive: Runtime Scaling (Log-Log)</div>
+    <div class="legend-toggle" id="scaling-legend"></div>
+    <div id="scaling-plot" style="text-align:center;"></div>
+    <div class="caption">
+        Log-log plot of runtime vs. graph size, averaged across seeds. Toggle lines on/off with the checkboxes. Hover for exact values.
+    </div>
+    <noscript><div class="static-fallback">Scaling plot requires JavaScript.</div></noscript>
+</div>
+
+<h3>Timing comparison</h3>
+<p>
+At small sizes (\(n \leq 500\)), SDP is faster than Rank-2 because the \(O(n^5/P)\) cost dominates even with 15 GPUs. But the crossover happens around \(n = 750\text{--}1000\) for regular graphs. At \(n = 1500\), Rank-2 takes about 7,100 seconds while SDP takes about 4,400 seconds on regular graphs &mdash; SDP is still faster here. However, Rank-2 scales linearly with additional GPUs: adding just 5 more P100s would bring it below SDP's time, and the algorithm can distribute across any number of machines with no communication overhead.
+</p>
+
+<h3>Scaling to modern hardware</h3>
+
+<p>
+Everything above uses 2016-era P100 GPUs — the "obsolete hardware" story. But the same code, without any modifications, also runs on modern NVIDIA H200 GPUs. This validates that the software engineering is hardware-agnostic: the same <code>worker.py</code> and <code>parallel_rank_r_dir_gpu_fullgpu.py</code> execute on GPUs spanning three generations and two CPU architectures.
+</p>
+
+<p>
+The table below shows rank-2 results on a single H200 node. All experiments use the same recursive GPU solver, K=3, and 32-bit precision. The <a href="https://www.nvidia.com/en-us/data-center/gset/">GSet benchmark</a> instances are standard testbeds for Max-Cut algorithms; here we solve the Max-3-Cut formulation on these graphs.
+</p>
+
+<table class="hw-table" style="width:100%; margin: 20px auto;">
+<thead>
+<tr>
+    <th>Instance</th><th>\(n\)</th><th>GPUs</th><th>Avg. batch (s)</th><th>Total time</th><th>Score (Max-3-Cut)</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>GSet-1</td><td>800</td><td>4×H200</td><td>46.5</td><td>5.6 min</td><td>41,939</td></tr>
+<tr><td>GSet-1</td><td>800</td><td>6×H200</td><td>41.1</td><td>3.4 min</td><td>41,939</td></tr>
+<tr><td>GSet-43</td><td>1,000</td><td>6×H200</td><td>49.5</td><td>6.5 min</td><td>22,965</td></tr>
+<tr><td>GSet-22</td><td>2,000</td><td>6×H200</td><td>84.3</td><td>1.4 hrs</td><td>45,791</td></tr>
+<tr><td>5-regular</td><td>3,600</td><td>8×H200</td><td>242.0</td><td><strong>18.3 hrs</strong></td><td>25,320</td></tr>
+</tbody>
+</table>
+<p class="caption" style="text-align:center; font-size:14px; color:#555;">
+    <em>Rank-2 Max-3-Cut results on H200 GPUs. GSet scores are for the K=3 formulation and are not comparable to published Max-2-Cut (BQP) values, which optimize a different objective.</em>
+</p>
+
+<p>
+The standout result is the 5-regular graph with \(n=3{,}600\) on 8 H200 GPUs: <strong>18.3 hours</strong> to enumerate all 209 billion rank-2 candidate tuples. This establishes \(n \approx 3{,}600\) as the practical frontier for exact rank-2 enumeration within a 24-hour budget on a single modern GPU node.
+</p>
+
+<p>
+How do H200s compare to our P100 cluster? At \(n=1{,}000\), 6 H200s complete the rank-2 search in 392 seconds, compared to 625 seconds on 15 P100s. Per-GPU, each H200 is roughly 4× faster — consistent with its higher memory bandwidth and FP32 throughput. The P100 story is not about per-GPU competitiveness; it's about <em>accessibility</em>. Universities have racks of P100s sitting idle. Our algorithm turns them into a useful combinatorial optimization cluster without needing modern hardware.
+</p>
+
+<h4>A glimpse at Rank-3</h4>
+<p>
+The rank-3 algorithm (\(\mathcal{O}(n^7)\) candidates) is validated at small scale on H200s: \(n=50\) completes in 24 seconds, \(n=100\) in 381 seconds, both producing correct optimal scores. However, scaling is severe — extrapolating from observed rates, \(n=1{,}000\) at rank-3 would require approximately 160,000 hours, placing full rank-3 enumeration far beyond any practical budget. This motivates the <a href="#ideas">randomized sampling</a> direction: even partial enumeration of rank-3 candidates can find high-quality solutions (an early checkpoint at \(n=1{,}000\) achieved 86.6% of the rank-2 score after processing less than 1% of candidates).
+</p>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 6: HONEST ASSESSMENT                                 -->
+<!-- ============================================================ -->
+<h2>6. Honest Assessment</h2>
+
+<p>
+Every method has its strengths and weaknesses. Rather than overselling our approach, we present a balanced comparison across five dimensions: solution quality, speed, parallelizability, scalability to large graphs, and theoretical guarantees. The radar chart below visualizes these trade-offs.
+</p>
+
+<div class="interactive-box" id="radar-box">
+    <div class="box-title">Interactive: Method Comparison Radar</div>
+    <div id="radar-chart" style="text-align:center;"></div>
+    <div class="radar-legend" id="radar-legend"></div>
+    <div class="caption">
+        Hover over a method name to highlight its polygon and dim others. Five axes: Quality (avg. cut ratio vs. best known), Speed (1/runtime), Parallelizability (speedup with more GPUs), Scalability (largest tractable n), Theory (approximation guarantee strength).
+    </div>
+    <noscript><div class="static-fallback">Radar chart requires JavaScript.</div></noscript>
+</div>
+
+<h3>When to use low-rank methods</h3>
+<p>
+<strong>Use Rank-2 when:</strong> your graph has concentrated spectral energy (torus lattices, regular graphs, structured networks), you have access to multiple GPUs (even old ones), you need provable guarantees, and your graph is large enough (\(n \geq 500\)) that SDP's sequential nature becomes a bottleneck.
+</p>
+
+<p>
+<strong>Use SDP when:</strong> you need the best known approximation ratio regardless of runtime, your graph is small (\(n \leq 500\)), or the graph has flat spectral structure (e.g., SBM, Erdos-Renyi) where low-rank methods lose information.
+</p>
+
+<p>
+<strong>Use Greedy when:</strong> you need a quick, good-enough answer. Greedy is surprisingly strong on SBM graphs, often outperforming SDP. Its weakness is the lack of theoretical guarantees and poor performance on structured graphs where the optimal cut has a specific algebraic structure that Greedy's local moves cannot discover.
+</p>
+
+<h3>Limitations</h3>
+<p>
+The \(\mathcal{O}(n^5)\) asymptotic complexity of Rank-2 is the elephant in the room. While parallelism hides this for moderate \(n\), at \(n = 2000\) the candidate count reaches \(\sim 10^{13}\), which would require hundreds of GPUs. Rank-3 (\(\mathcal{O}(n^7)\)) is even worse. Future work on randomized candidate sampling &mdash; evaluating only a random subset of candidates &mdash; could dramatically reduce this cost while maintaining solution quality with high probability.
+</p>
+
+<p>
+The second limitation is graph-family dependence. Low-rank methods are not universal: they excel on spectrally concentrated graphs and struggle on graphs with flat spectra. A practitioner must check the spectral energy ratio before deciding whether to use this approach. Fortunately, this check (computing a few top eigenvalues) is itself fast and parallelizable.
+</p>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 7: CODE & REPRODUCIBILITY                            -->
+<!-- ============================================================ -->
+<h2>7. Code &amp; Reproducibility</h2>
+
+<p>
+All code, data, and scripts to reproduce every experiment in this post are available on GitHub:
+</p>
+
+<p style="text-align:center; font-size:1.1em;">
+    <a href="https://github.com/barbara-su/max-k-cut-parallel">github.com/barbara-su/max-k-cut-parallel</a>
+</p>
+
+<h3>Quick start</h3>
+<pre><code># Clone and install
+git clone https://github.com/barbara-su/max-k-cut-parallel.git
+cd max-k-cut-parallel
+pip install -r requirements.txt
+
+# Run Rank-2 on a single GPU (torus, n=252)
+python run_rank2.py --family torus --n 252 --gpus 1
+
+# Run distributed across multiple machines
+python coordinator.py --config cluster.yaml --family regular --n 1000</code></pre>
+
+<h3>Hardware requirements</h3>
+<ul>
+    <li><strong>Minimum:</strong> 1 NVIDIA GPU with CUDA 10.2+ and 8 GB VRAM, PyTorch 1.12+</li>
+    <li><strong>Recommended:</strong> 4+ GPUs for \(n \geq 500\), 8+ GPUs for \(n \geq 1000\)</li>
+    <li><strong>Commodity setup (this blog):</strong> 15 &times; P100 (16 GB) across 4 machines (2 &times; x86_64, 2 &times; ppc64le), connected via campus network</li>
+    <li><strong>Modern setup:</strong> Single 8 &times; H200 node reaches \(n = 3{,}600\) for rank-2 within 24 hours</li>
+    <li><strong>No tensor cores required.</strong> Algorithm uses standard FP32 GEMM and linear algebra — works on any CUDA GPU from Pascal (2016) onward</li>
+</ul>
+
+<h3>Citation</h3>
+<div class="bibtex-block">@article{Stevens2025maxkcut,
+  title   = {Exploiting Low-Rank Structure in Max-$K$-Cut Problems},
+  author  = {Stevens, Ria and Liao, Fangshuo and Su, Barbara
+             and Li, Jianqiang and Kyrillidis, Anastasios},
+  journal = {arXiv preprint arXiv:2602.20376},
+  year    = {2025}
+}</div>
+
+<hr class="section-divider">
+
+<div class="footer">
+    <p>
+        &copy; 2026 Kyrillidis Lab, Rice University.
+        Built with <a href="https://d3js.org">D3.js</a> and <a href="https://www.mathjax.org">MathJax</a>.
+        Part of the <a href="https://akyrillidis.github.io/explore-quantum/">QUANTAS</a> project.
+    </p>
+</div>
+
+</div><!-- end container -->
+
+<!-- ============================================================ -->
+<!-- EMBEDDED DATA                                                -->
+<!-- ============================================================ -->
+<script>
+// ---- Experimental results data ----
+const DATA = [
+  {family:"regular",n:250,seed:0,rank2_score:1776.0,rank2_time:31.3,random_score:1353,random_time:0.098,greedy_score:1746,greedy_time:0.7,sdp_score:1794,sdp_time:40.2,energy_ratio:0.0142,eigengap:0.0183},
+  {family:"regular",n:250,seed:1,rank2_score:1779.0,rank2_time:29.3,random_score:1344,random_time:0.075,greedy_score:1746,greedy_time:0.6,sdp_score:1779,sdp_time:37.5,energy_ratio:0.0143,eigengap:0.0706},
+  {family:"regular",n:250,seed:2,rank2_score:1782.0,rank2_time:30.1,random_score:1368,random_time:0.087,greedy_score:1743,greedy_time:0.7,sdp_score:1782,sdp_time:61.5,energy_ratio:0.0143,eigengap:0.0373},
+  {family:"regular",n:500,seed:0,rank2_score:3504.0,rank2_time:215.0,random_score:2661,random_time:0.518,greedy_score:3489,greedy_time:5.5,sdp_score:3522,sdp_time:672.4,energy_ratio:0.0071,eigengap:0.0107},
+  {family:"regular",n:500,seed:1,rank2_score:3525.0,rank2_time:214.2,random_score:2652,random_time:1.154,greedy_score:3495,greedy_time:4.5,sdp_score:3525,sdp_time:663.7,energy_ratio:0.0071,eigengap:0.0368},
+  {family:"regular",n:500,seed:2,rank2_score:3513.0,rank2_time:210.6,random_score:2640,random_time:0.553,greedy_score:3513,greedy_time:5.4,sdp_score:3549,sdp_time:585.7,energy_ratio:0.0071,eigengap:0.0046},
+  {family:"regular",n:750,seed:0,rank2_score:5331.0,rank2_time:374.2,random_score:3948,random_time:1.287,greedy_score:5298,greedy_time:15.2,sdp_score:5310,sdp_time:962.6,energy_ratio:0.0048,eigengap:0.0485},
+  {family:"regular",n:750,seed:1,rank2_score:5268.0,rank2_time:308.3,random_score:3933,random_time:1.763,greedy_score:5262,greedy_time:12.0,sdp_score:5298,sdp_time:960.1,energy_ratio:0.0048,eigengap:0.0268},
+  {family:"regular",n:750,seed:2,rank2_score:5283.0,rank2_time:308.2,random_score:3942,random_time:1.66,greedy_score:5310,greedy_time:11.9,sdp_score:5313,sdp_time:956.5,energy_ratio:0.0048,eigengap:0.0334},
+  {family:"regular",n:1000,seed:0,rank2_score:7101.0,rank2_time:835.1,random_score:5241,random_time:3.694,greedy_score:7023,greedy_time:28.2,sdp_score:7062,sdp_time:1457.3,energy_ratio:0.0036,eigengap:0.0198},
+  {family:"regular",n:1000,seed:1,rank2_score:7008.0,rank2_time:876.3,random_score:5214,random_time:3.446,greedy_score:7008,greedy_time:27.1,sdp_score:7020,sdp_time:1457.4,energy_ratio:0.0036,eigengap:0.0374},
+  {family:"regular",n:1000,seed:2,rank2_score:7020.0,rank2_time:842.8,random_score:5238,random_time:3.733,greedy_score:7047,greedy_time:27.0,sdp_score:7008,sdp_time:1459.2,energy_ratio:0.0036,eigengap:0.0062},
+  {family:"regular",n:1250,seed:0,rank2_score:8817.0,rank2_time:1964.3,random_score:6522,random_time:10.185,greedy_score:8766,greedy_time:89.1,sdp_score:8760,sdp_time:2378.8,energy_ratio:0.0029,eigengap:0.0333},
+  {family:"regular",n:1250,seed:1,rank2_score:8814.0,rank2_time:1954.4,random_score:6486,random_time:8.206,greedy_score:8787,greedy_time:80.1,sdp_score:8748,sdp_time:2327.6,energy_ratio:0.0029,eigengap:0.0119},
+  {family:"regular",n:1250,seed:2,rank2_score:8838.0,rank2_time:1958.4,random_score:6513,random_time:7.797,greedy_score:8799,greedy_time:82.8,sdp_score:8733,sdp_time:2314.3,energy_ratio:0.0029,eigengap:0.0115},
+  {family:"regular",n:1500,seed:0,rank2_score:10536.0,rank2_time:7125.6,random_score:7782,random_time:30.326,greedy_score:10572,greedy_time:303.3,sdp_score:10527,sdp_time:4397.7,energy_ratio:0.0024,eigengap:0.0191},
+  {family:"regular",n:1500,seed:1,rank2_score:10536.0,rank2_time:7166.0,random_score:7761,random_time:28.088,greedy_score:10533,greedy_time:236.0,sdp_score:10467,sdp_time:4416.5,energy_ratio:0.0024,eigengap:0.0152},
+  {family:"regular",n:1500,seed:2,rank2_score:10572.0,rank2_time:7085.5,random_score:7797,random_time:28.692,greedy_score:10593,greedy_time:291.3,sdp_score:10488,sdp_time:4339.3,energy_ratio:0.0024,eigengap:0.023},
+  {family:"sbm",n:250,seed:0,rank2_score:7158.0,rank2_time:29.6,random_score:6696,random_time:0.121,greedy_score:7719,greedy_time:1.2,sdp_score:7734,sdp_time:41.7,energy_ratio:0.0127,eigengap:0.6764},
+  {family:"sbm",n:250,seed:1,rank2_score:7407.0,rank2_time:30.7,random_score:6819,random_time:0.078,greedy_score:7917,greedy_time:1.1,sdp_score:7839,sdp_time:33.8,energy_ratio:0.0127,eigengap:0.9024},
+  {family:"sbm",n:250,seed:2,rank2_score:7284.0,rank2_time:29.6,random_score:6825,random_time:0.066,greedy_score:7884,greedy_time:0.6,sdp_score:7782,sdp_time:32.1,energy_ratio:0.0124,eigengap:0.2994},
+  {family:"sbm",n:500,seed:0,rank2_score:28536.0,rank2_time:215.2,random_score:26970,random_time:0.713,greedy_score:30111,greedy_time:9.5,sdp_score:29865,sdp_time:410.6,energy_ratio:0.0056,eigengap:1.148},
+  {family:"sbm",n:500,seed:1,rank2_score:28533.0,rank2_time:217.6,random_score:26982,random_time:0.363,greedy_score:30084,greedy_time:10.3,sdp_score:29850,sdp_time:339.5,energy_ratio:0.0055,eigengap:0.1645},
+  {family:"sbm",n:500,seed:2,rank2_score:28221.0,rank2_time:227.3,random_score:27186,random_time:0.466,greedy_score:30282,greedy_time:7.4,sdp_score:30093,sdp_time:339.9,energy_ratio:0.0057,eigengap:1.4556},
+  {family:"sbm",n:750,seed:0,rank2_score:63342.0,rank2_time:303.9,random_score:60807,random_time:1.563,greedy_score:66885,greedy_time:31.6,sdp_score:66348,sdp_time:968.9,energy_ratio:0.0036,eigengap:0.8119},
+  {family:"sbm",n:750,seed:1,rank2_score:62364.0,rank2_time:374.0,random_score:60306,random_time:1.408,greedy_score:66396,greedy_time:24.3,sdp_score:65892,sdp_time:976.6,energy_ratio:0.0036,eigengap:0.8195},
+  {family:"sbm",n:750,seed:2,rank2_score:61908.0,rank2_time:314.9,random_score:60498,random_time:1.693,greedy_score:66555,greedy_time:42.5,sdp_score:66006,sdp_time:969.2,energy_ratio:0.0035,eigengap:0.4542},
+  {family:"sbm",n:1000,seed:0,rank2_score:111681.0,rank2_time:855.3,random_score:107505,random_time:4.148,greedy_score:117099,greedy_time:94.5,sdp_score:115521,sdp_time:1381.5,energy_ratio:0.0026,eigengap:0.9846},
+  {family:"sbm",n:1000,seed:1,rank2_score:110310.0,rank2_time:920.0,random_score:107916,random_time:4.205,greedy_score:117318,greedy_time:163.0,sdp_score:115959,sdp_time:1421.8,energy_ratio:0.0026,eigengap:3.031},
+  {family:"sbm",n:1000,seed:2,rank2_score:110877.0,rank2_time:1602.1,random_score:107355,random_time:4.811,greedy_score:116895,greedy_time:149.8,sdp_score:115281,sdp_time:1409.1,energy_ratio:0.0026,eigengap:0.2389},
+  {family:"sbm",n:1250,seed:0,rank2_score:171255.0,rank2_time:3655.1,random_score:167628,random_time:8.603,greedy_score:181149,greedy_time:230.0,sdp_score:179007,sdp_time:2447.3,energy_ratio:0.002,eigengap:3.3817},
+  {family:"sbm",n:1250,seed:1,rank2_score:172092.0,rank2_time:3331.6,random_score:168087,random_time:9.648,greedy_score:181410,greedy_time:205.2,sdp_score:179208,sdp_time:2466.8,energy_ratio:0.002,eigengap:0.7398},
+  {family:"sbm",n:1250,seed:2,rank2_score:170820.0,rank2_time:3207.9,random_score:166710,random_time:9.139,greedy_score:179970,greedy_time:362.7,sdp_score:177507,sdp_time:2509.6,energy_ratio:0.002,eigengap:0.0487},
+  {family:"sbm",n:1500,seed:0,rank2_score:244545.0,rank2_time:7083.5,random_score:241311,random_time:29.025,greedy_score:259518,greedy_time:935.1,sdp_score:254808,sdp_time:4358.8,energy_ratio:0.0017,eigengap:1.6726},
+  {family:"sbm",n:1500,seed:1,rank2_score:247425.0,rank2_time:6938.8,random_score:241203,random_time:29.269,greedy_score:259836,greedy_time:1486.0,sdp_score:254586,sdp_time:3895.6,energy_ratio:0.0017,eigengap:0.9114},
+  {family:"sbm",n:1500,seed:2,rank2_score:245763.0,rank2_time:7149.3,random_score:240468,random_time:31.272,greedy_score:258123,greedy_time:658.9,sdp_score:253362,sdp_time:4028.7,energy_ratio:0.0017,eigengap:0.1531},
+  {family:"torus",n:252,seed:0,rank2_score:1512.0,rank2_time:28.6,random_score:1080,random_time:0.12,greedy_score:1470,greedy_time:1.1,sdp_score:1512,sdp_time:44.3,energy_ratio:0.0158,eigengap:0.1662},
+  {family:"torus",n:252,seed:1,rank2_score:1513.0,rank2_time:29.6,random_score:1080,random_time:0.192,greedy_score:1471,greedy_time:0.9,sdp_score:1513,sdp_time:44.7,energy_ratio:0.0158,eigengap:0.1697},
+  {family:"torus",n:252,seed:2,rank2_score:1512.0,rank2_time:32.1,random_score:1080,random_time:0.196,greedy_score:1461,greedy_time:1.5,sdp_score:1512,sdp_time:44.1,energy_ratio:0.0158,eigengap:0.169},
+  {family:"torus",n:504,seed:0,rank2_score:3023.0,rank2_time:223.5,random_score:2162,random_time:0.685,greedy_score:2931,greedy_time:5.1,sdp_score:3023,sdp_time:661.5,energy_ratio:0.0079,eigengap:0.0031},
+  {family:"torus",n:504,seed:1,rank2_score:3025.0,rank2_time:221.8,random_score:2164,random_time:0.404,greedy_score:2948,greedy_time:4.8,sdp_score:3025,sdp_time:675.5,energy_ratio:0.0079,eigengap:0.0012},
+  {family:"torus",n:504,seed:2,rank2_score:3023.0,rank2_time:237.0,random_score:2162,random_time:0.599,greedy_score:2954,greedy_time:4.8,sdp_score:3023,sdp_time:663.3,energy_ratio:0.0079,eigengap:0.0033},
+  {family:"torus",n:756,seed:0,rank2_score:4535.0,rank2_time:308.8,random_score:3195,random_time:1.649,greedy_score:4407,greedy_time:18.7,sdp_score:4535,sdp_time:932.6,energy_ratio:0.0053,eigengap:0.0246},
+  {family:"torus",n:756,seed:1,rank2_score:4538.0,rank2_time:315.7,random_score:3197,random_time:2.04,greedy_score:4410,greedy_time:17.6,sdp_score:4538,sdp_time:936.7,energy_ratio:0.0053,eigengap:0.0209},
+  {family:"torus",n:756,seed:2,rank2_score:4534.0,rank2_time:346.2,random_score:3193,random_time:1.734,greedy_score:4392,greedy_time:17.8,sdp_score:4534,sdp_time:938.4,energy_ratio:0.0053,eigengap:0.0255},
+  {family:"torus",n:1008,seed:0,rank2_score:6047.0,rank2_time:1557.6,random_score:4218,random_time:5.148,greedy_score:5884,greedy_time:50.8,sdp_score:6047,sdp_time:1578.8,energy_ratio:0.004,eigengap:0.0054},
+  {family:"torus",n:1008,seed:1,rank2_score:6050.0,rank2_time:1549.1,random_score:4220,random_time:4.897,greedy_score:5881,greedy_time:64.8,sdp_score:6050,sdp_time:1575.0,energy_ratio:0.004,eigengap:0.0029},
+  {family:"torus",n:1008,seed:2,rank2_score:6046.0,rank2_time:1498.1,random_score:4217,random_time:4.315,greedy_score:5874,greedy_time:38.4,sdp_score:6043,sdp_time:1588.3,energy_ratio:0.004,eigengap:0.0037},
+  {family:"torus",n:1250,seed:0,rank2_score:7499.0,rank2_time:3331.7,random_score:5228,random_time:9.183,greedy_score:7300,greedy_time:77.4,sdp_score:7490,sdp_time:2456.3,energy_ratio:0.0032,eigengap:0.0121},
+  {family:"torus",n:1250,seed:1,rank2_score:7502.0,rank2_time:3348.7,random_score:5232,random_time:8.573,greedy_score:7312,greedy_time:106.4,sdp_score:7490,sdp_time:2456.0,energy_ratio:0.0032,eigengap:0.0112},
+  {family:"torus",n:1250,seed:2,rank2_score:7498.0,rank2_time:3259.8,random_score:5228,random_time:9.784,greedy_score:7260,greedy_time:116.0,sdp_score:7486,sdp_time:2454.3,energy_ratio:0.0032,eigengap:0.0111},
+  {family:"torus",n:1500,seed:0,rank2_score:8998.0,rank2_time:7133.7,random_score:6285,random_time:32.565,greedy_score:8786,greedy_time:370.1,sdp_score:8956,sdp_time:3859.4,energy_ratio:0.0027,eigengap:0.0033},
+  {family:"torus",n:1500,seed:1,rank2_score:9001.0,rank2_time:6885.5,random_score:6289,random_time:28.858,greedy_score:8805,greedy_time:291.7,sdp_score:8977,sdp_time:3878.9,energy_ratio:0.0027,eigengap:0.0018},
+  {family:"torus",n:1500,seed:2,rank2_score:8999.0,rank2_time:6812.6,random_score:6288,random_time:28.777,greedy_score:8758,greedy_time:292.8,sdp_score:8963,sdp_time:3853.1,energy_ratio:0.0027,eigengap:0.0016}
+];
+
+// ---- Example eigenvalue data for spectral thermometer ----
+// Actual top-10 eigenvalues from n=500 instances (seed=0), computed from Q matrices
+const EIGENVALUE_DATA = {
+    torus: [7.998, 7.949, 7.945, 7.880, 7.875, 7.831, 7.827, 7.825, 7.823, 7.800],
+    regular: [8.953, 8.872, 8.862, 8.851, 8.815, 8.803, 8.797, 8.785, 8.741, 8.731],
+    sbm: [74.464, 73.761, 72.613, 72.316, 72.218, 71.903, 71.585, 71.359, 71.201, 71.108]
+};
+
+// ---- Cluster machine specs ----
+const MACHINES = [
+    {name: "anton.k0", arch: "x86_64", gpus: 4, throughput: 1.2, color: "#648FFF"},
+    {name: "anton.k1", arch: "x86_64", gpus: 4, throughput: 1.15, color: "#785EF0"},
+    {name: "kp001", arch: "ppc64le", gpus: 4, throughput: 0.85, color: "#DC267F"},
+    {name: "kp002", arch: "ppc64le", gpus: 3, throughput: 0.72, color: "#FFB000"}
+];
+
+// ---- Radar chart data ----
+const RADAR_METHODS = [
+    {name: "Rank-2 (15 GPU)", color: "#648FFF", values: [0.82, 0.55, 0.95, 0.80, 0.90]},
+    {name: "SDP", color: "#785EF0", values: [0.92, 0.40, 0.15, 0.50, 0.95]},
+    {name: "Greedy", color: "#DC267F", values: [0.78, 0.85, 0.30, 0.90, 0.10]},
+    {name: "Random", color: "#FFB000", values: [0.55, 0.98, 0.50, 0.95, 0.05]}
+];
+const RADAR_AXES = ["Quality", "Speed", "Parallelizability", "Scalability", "Theory"];
+
+// Phase sweep visualizer removed — see paper for algorithm details.
+
+// ============================================================
+// ELEMENT 2: GPU CLUSTER DIAGRAM
+// ============================================================
+(function() {
+    const container = document.getElementById("cluster-diagram");
+    const toggleBtn = document.getElementById("split-toggle");
+    const speedupDiv = document.getElementById("cluster-speedup");
+    let isWeighted = false;
+
+    function render() {
+        container.innerHTML = "";
+        const totalGPUs = MACHINES.reduce((s, m) => s + m.gpus, 0); // 15
+        const totalThroughput = MACHINES.reduce((s, m) => s + m.gpus * m.throughput, 0);
+
+        MACHINES.forEach(m => {
+            const box = document.createElement("div");
+            box.className = "machine-box";
+
+            const equalShare = m.gpus / totalGPUs;
+            const weightedShare = (m.gpus * m.throughput) / totalThroughput;
+            const share = isWeighted ? weightedShare : equalShare;
+
+            // In equal mode, slow machines are bottlenecks
+            const equalTime = equalShare / (m.gpus * m.throughput);
+            const maxEqualTime = Math.max(...MACHINES.map(mm => (mm.gpus / totalGPUs) / (mm.gpus * mm.throughput)));
+            if (!isWeighted && equalTime >= maxEqualTime * 0.99) {
+                box.classList.add("bottleneck");
+            }
+
+            box.innerHTML = `
+                <div class="machine-name">${m.name}</div>
+                <div class="machine-arch">${m.arch}</div>
+                <div class="gpu-icons">
+                    ${'<div class="gpu-icon" style="background:' + m.color + '">P1</div>'.repeat(m.gpus).replace(/P1/g, () => 'P' + (Math.random()*100|0)%100)}
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" style="width:${(share * 100 / 0.35).toFixed(1)}%; background:${m.color};"></div>
+                </div>
+                <div class="work-label">${(share * 100).toFixed(1)}% of work</div>
+            `;
+
+            // Fix GPU icon labels
+            const icons = box.querySelectorAll('.gpu-icon');
+            icons.forEach((icon, i) => { icon.textContent = 'G' + i; });
+
+            container.appendChild(box);
+        });
+
+        if (isWeighted) {
+            speedupDiv.textContent = "Throughput-proportional: all machines finish together. 10.3x faster.";
+            speedupDiv.style.color = "#009E73";
+        } else {
+            speedupDiv.textContent = "Equal split: x86 machines idle while PowerPC machines grind.";
+            speedupDiv.style.color = "#DC267F";
+        }
+    }
+
+    toggleBtn.addEventListener("click", () => {
+        isWeighted = !isWeighted;
+        toggleBtn.textContent = isWeighted
+            ? "Show: Equal Splitting"
+            : "Show: Throughput-Proportional Splitting";
+        render();
+    });
+
+    render();
+})();
+
+// ============================================================
+// ELEMENT 3: SORTABLE RESULTS TABLE
+// ============================================================
+(function() {
+    const tbody = document.getElementById("results-tbody");
+    const filterBtns = document.querySelectorAll(".filter-btn");
+    let currentFamily = "all";
+    let sortCol = "n";
+    let sortAsc = true;
+
+    function familyLabel(f) {
+        return f === "regular" ? "3-Regular" : f === "torus" ? "Torus" : "SBM";
+    }
+
+    function renderTable() {
+        let filtered = currentFamily === "all" ? DATA : DATA.filter(d => d.family === currentFamily);
+
+        // Sort
+        filtered = filtered.slice().sort((a, b) => {
+            let va = a[sortCol], vb = b[sortCol];
+            if (va == null && vb == null) return 0;
+            if (va == null) return 1;
+            if (vb == null) return -1;
+            if (typeof va === "string") return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+            return sortAsc ? va - vb : vb - va;
+        });
+
+        tbody.innerHTML = "";
+        filtered.forEach(d => {
+            const tr = document.createElement("tr");
+            const scores = [
+                {key: "rank2_score", val: d.rank2_score},
+                {key: "greedy_score", val: d.greedy_score},
+                {key: "random_score", val: d.random_score},
+                {key: "sdp_score", val: d.sdp_score}
+            ].filter(s => s.val != null);
+            const maxScore = scores.length > 0 ? Math.max(...scores.map(s => s.val)) : null;
+
+            function scoreCell(val, isMax) {
+                if (val == null) return '<td class="running">running...</td>';
+                return `<td class="${isMax ? 'winner' : ''}">${val.toLocaleString()}</td>`;
+            }
+            function timeCell(val, extraClass) {
+                if (val == null) return '<td class="running">running...</td>';
+                const cls = extraClass ? ` class="${extraClass}"` : '';
+                return `<td${cls}>${val.toFixed(1)}</td>`;
+            }
+
+            // Highlight the faster one between rank-2 and SDP
+            const bothHaveTimes = (d.rank2_time != null && d.sdp_time != null);
+            const r2Faster = bothHaveTimes && d.rank2_time < d.sdp_time;
+            const sdpFaster = bothHaveTimes && d.sdp_time < d.rank2_time;
+
+            tr.innerHTML =
+                `<td>${familyLabel(d.family)}</td>` +
+                `<td>${d.n.toLocaleString()}</td>` +
+                `<td>${d.seed}</td>` +
+                scoreCell(d.rank2_score, d.rank2_score === maxScore) +
+                timeCell(d.rank2_time, r2Faster ? 'faster-than-sdp' : null) +
+                scoreCell(d.greedy_score, d.greedy_score === maxScore) +
+                timeCell(d.greedy_time) +
+                scoreCell(d.random_score, d.random_score === maxScore) +
+                scoreCell(d.sdp_score, d.sdp_score === maxScore) +
+                timeCell(d.sdp_time, sdpFaster ? 'faster-than-sdp' : null);
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Filter buttons
+    filterBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            filterBtns.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            currentFamily = btn.dataset.family;
+            renderTable();
+        });
+    });
+
+    // Sortable headers
+    document.querySelectorAll(".results-tbl th.sortable").forEach(th => {
+        th.addEventListener("click", () => {
+            const col = th.dataset.col;
+            if (sortCol === col) { sortAsc = !sortAsc; }
+            else { sortCol = col; sortAsc = true; }
+            // Update header arrows
+            document.querySelectorAll(".results-tbl th.sortable").forEach(h => {
+                h.textContent = h.textContent.replace(/ [▲▼]$/, '');
+            });
+            th.textContent += sortAsc ? " \u25B2" : " \u25BC";
+            renderTable();
+        });
+    });
+
+    renderTable();
+})();
+
+// ============================================================
+// ELEMENT 4: SCALING PLOT (LOG-LOG)
+// ============================================================
+(function() {
+    // Average data across seeds for each (family, n, method)
+    const families = ["regular", "torus", "sbm"];
+    const methods = [
+        {key: "rank2", label: "Rank-2 (15 GPU)", timeKey: "rank2_time", color: "#648FFF"},
+        {key: "greedy", label: "Greedy", timeKey: "greedy_time", color: "#DC267F"},
+        {key: "random", label: "Random", timeKey: "random_time", color: "#FFB000"},
+        {key: "sdp", label: "SDP", timeKey: "sdp_time", color: "#785EF0"}
+    ];
+
+    // Use regular family for the scaling plot (most complete data)
+    const familyData = DATA.filter(d => d.family === "regular");
+    const sizes = [...new Set(familyData.map(d => d.n))].sort((a,b) => a-b);
+
+    const avgData = {};
+    methods.forEach(m => {
+        avgData[m.key] = [];
+        sizes.forEach(n => {
+            const rows = familyData.filter(d => d.n === n && d[m.timeKey] != null);
+            if (rows.length > 0) {
+                const avgTime = rows.reduce((s, r) => s + r[m.timeKey], 0) / rows.length;
+                avgData[m.key].push({n, time: avgTime});
+            }
+        });
+    });
+
+    const margin = {top: 20, right: 30, bottom: 50, left: 60};
+    const width = 660 - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
+
+    const svgEl = d3.select("#scaling-plot").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+        .style("max-width", "100%");
+
+    const g = svgEl.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const xScale = d3.scaleLog().domain([200, 1800]).range([0, width]);
+    const yScale = d3.scaleLog().domain([0.05, 10000]).range([height, 0]);
+
+    // Axes
+    g.append("g").attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(xScale).tickValues([250, 500, 750, 1000, 1250, 1500]).tickFormat(d3.format("d")))
+        .selectAll("text").attr("font-family", "Source Sans Pro, sans-serif").attr("font-size", "12px");
+
+    g.append("g")
+        .call(d3.axisLeft(yScale).ticks(6, ".0f"))
+        .selectAll("text").attr("font-family", "Source Sans Pro, sans-serif").attr("font-size", "12px");
+
+    g.append("text").attr("x", width/2).attr("y", height + 40)
+        .attr("text-anchor", "middle").attr("font-family", "Source Sans Pro, sans-serif")
+        .attr("font-size", "14px").text("Graph size n");
+
+    g.append("text").attr("transform", "rotate(-90)").attr("x", -height/2).attr("y", -45)
+        .attr("text-anchor", "middle").attr("font-family", "Source Sans Pro, sans-serif")
+        .attr("font-size", "14px").text("Runtime (seconds)");
+
+    // Grid
+    g.append("g").attr("class", "grid")
+        .call(d3.axisLeft(yScale).ticks(6).tickSize(-width).tickFormat(""))
+        .selectAll("line").attr("stroke", "#eee");
+
+    const tooltip = d3.select("#scaling-plot").append("div")
+        .style("position", "absolute").style("background", "#fff")
+        .style("border", "1px solid #ccc").style("border-radius", "4px")
+        .style("padding", "6px 10px").style("font-family", "Fira Mono, monospace")
+        .style("font-size", "12px").style("pointer-events", "none")
+        .style("opacity", 0).style("box-shadow", "0 2px 6px rgba(0,0,0,0.1)");
+
+    const lineGen = d3.line()
+        .x(d => xScale(d.n))
+        .y(d => yScale(d.time));
+
+    const visibility = {};
+    methods.forEach(m => { visibility[m.key] = true; });
+
+    function drawLines() {
+        g.selectAll(".method-line, .method-dot").remove();
+        methods.forEach(m => {
+            if (!visibility[m.key] || avgData[m.key].length === 0) return;
+
+            g.append("path")
+                .datum(avgData[m.key])
+                .attr("class", "method-line")
+                .attr("fill", "none")
+                .attr("stroke", m.color)
+                .attr("stroke-width", 2.5)
+                .attr("d", lineGen);
+
+            g.selectAll(`.dot-${m.key}`).data(avgData[m.key]).enter()
+                .append("circle")
+                .attr("class", "method-dot")
+                .attr("cx", d => xScale(d.n))
+                .attr("cy", d => yScale(d.time))
+                .attr("r", 5)
+                .attr("fill", m.color)
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 1.5)
+                .on("mouseover", function(event, d) {
+                    tooltip.style("opacity", 1)
+                        .html(`<strong>${m.label}</strong><br>n = ${d.n}<br>Time: ${d.time.toFixed(1)}s`)
+                        .style("left", (event.offsetX + 10) + "px")
+                        .style("top", (event.offsetY - 30) + "px");
+                })
+                .on("mouseout", () => tooltip.style("opacity", 0));
+        });
+    }
+
+    // Legend toggles
+    const legendDiv = document.getElementById("scaling-legend");
+    methods.forEach(m => {
+        const label = document.createElement("label");
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = true;
+        cb.addEventListener("change", () => {
+            visibility[m.key] = cb.checked;
+            drawLines();
+        });
+        const swatch = document.createElement("span");
+        swatch.style.display = "inline-block";
+        swatch.style.width = "12px";
+        swatch.style.height = "12px";
+        swatch.style.background = m.color;
+        swatch.style.borderRadius = "2px";
+        swatch.style.marginRight = "2px";
+        label.appendChild(cb);
+        label.appendChild(swatch);
+        label.appendChild(document.createTextNode(" " + m.label));
+        legendDiv.appendChild(label);
+    });
+
+    drawLines();
+})();
+
+// ============================================================
+// ELEMENT 5: SPECTRAL ENERGY THERMOMETER
+// ============================================================
+(function() {
+    const container = document.getElementById("spectral-charts");
+    const slider = document.getElementById("rank-slider");
+    const valSpan = document.getElementById("rank-val");
+    const readout = document.getElementById("energy-readout");
+
+    const familyNames = {torus: "Torus", regular: "3-Regular", sbm: "SBM"};
+    const familyColors = {torus: "#009E73", regular: "#648FFF", sbm: "#DC267F"};
+
+    function render(r) {
+        container.innerHTML = "";
+        const readouts = [];
+
+        ["torus", "regular", "sbm"].forEach(fam => {
+            const eigs = EIGENVALUE_DATA[fam];
+            const total = eigs.reduce((s, v) => s + v, 0);
+            const captured = eigs.slice(0, r).reduce((s, v) => s + v, 0);
+            const pct = (captured / total * 100).toFixed(1);
+            readouts.push(`${familyNames[fam]}: ${pct}%`);
+
+            const chartDiv = document.createElement("div");
+            chartDiv.style.textAlign = "center";
+            chartDiv.style.flex = "1";
+            chartDiv.style.minWidth = "180px";
+
+            const barW = 190, barH = 160;
+            const svg = d3.select(chartDiv).append("svg")
+                .attr("width", barW).attr("height", barH + 30);
+
+            const maxEig = Math.max(...eigs);
+            const bw = 14, gap = 4;
+            const startX = (barW - eigs.length * (bw + gap)) / 2;
+
+            svg.append("text")
+                .attr("x", barW / 2).attr("y", 14)
+                .attr("text-anchor", "middle")
+                .attr("font-family", "Source Sans Pro, sans-serif")
+                .attr("font-size", "13px").attr("font-weight", 600)
+                .attr("fill", familyColors[fam])
+                .text(familyNames[fam]);
+
+            eigs.forEach((v, i) => {
+                const barHeight = (v / maxEig) * (barH - 30);
+                const isIncluded = i < r;
+                svg.append("rect")
+                    .attr("x", startX + i * (bw + gap))
+                    .attr("y", barH - barHeight + 20)
+                    .attr("width", bw)
+                    .attr("height", barHeight)
+                    .attr("rx", 2)
+                    .attr("fill", isIncluded ? familyColors[fam] : "#ccc")
+                    .attr("opacity", isIncluded ? 0.85 : 0.4);
+
+                svg.append("text")
+                    .attr("x", startX + i * (bw + gap) + bw/2)
+                    .attr("y", barH + 32)
+                    .attr("text-anchor", "middle")
+                    .attr("font-family", "Fira Mono, monospace")
+                    .attr("font-size", "8px")
+                    .attr("fill", "#888")
+                    .text(i + 1);
+            });
+
+            svg.append("text")
+                .attr("x", barW / 2).attr("y", barH + 46)
+                .attr("text-anchor", "middle")
+                .attr("font-family", "Source Sans Pro, sans-serif")
+                .attr("font-size", "12px").attr("fill", "#555")
+                .text(pct + "% captured");
+
+            container.appendChild(chartDiv);
+        });
+
+        readout.innerHTML = readouts.map((r, i) => {
+            const colors = ["#009E73", "#648FFF", "#DC267F"];
+            return `<span style="color:${colors[i]}">${r}</span>`;
+        }).join(" &nbsp;|&nbsp; ");
+    }
+
+    slider.addEventListener("input", () => {
+        const r = +slider.value;
+        valSpan.textContent = "r = " + r;
+        render(r);
+    });
+
+    render(2);
+})();
+
+// ============================================================
+// ELEMENT 6: RADAR CHART
+// ============================================================
+(function() {
+    const W = 420, H = 420, cx = W/2, cy = H/2, R = 150;
+    const n = RADAR_AXES.length;
+    const angleSlice = 2 * Math.PI / n;
+
+    const svg = d3.select("#radar-chart").append("svg")
+        .attr("width", W).attr("height", H)
+        .attr("viewBox", `0 0 ${W} ${H}`)
+        .style("max-width", "100%");
+
+    // Grid circles
+    const levels = 5;
+    for (let l = 1; l <= levels; l++) {
+        const r = R * l / levels;
+        svg.append("circle")
+            .attr("cx", cx).attr("cy", cy).attr("r", r)
+            .attr("fill", "none").attr("stroke", "#ddd").attr("stroke-width", 0.8);
+    }
+
+    // Axes
+    RADAR_AXES.forEach((axis, i) => {
+        const angle = i * angleSlice - Math.PI / 2;
+        const x = cx + (R + 25) * Math.cos(angle);
+        const y = cy + (R + 25) * Math.sin(angle);
+
+        svg.append("line")
+            .attr("x1", cx).attr("y1", cy)
+            .attr("x2", cx + R * Math.cos(angle))
+            .attr("y2", cy + R * Math.sin(angle))
+            .attr("stroke", "#ccc").attr("stroke-width", 1);
+
+        svg.append("text")
+            .attr("x", x).attr("y", y)
+            .attr("text-anchor", "middle").attr("dominant-baseline", "central")
+            .attr("font-family", "Source Sans Pro, sans-serif")
+            .attr("font-size", "12px").attr("fill", "#555").attr("font-weight", 600)
+            .text(axis);
+    });
+
+    // Method polygons
+    const polygons = [];
+    RADAR_METHODS.forEach(method => {
+        const points = method.values.map((v, i) => {
+            const angle = i * angleSlice - Math.PI / 2;
+            return [cx + R * v * Math.cos(angle), cy + R * v * Math.sin(angle)];
+        });
+
+        const poly = svg.append("polygon")
+            .attr("points", points.map(p => p.join(",")).join(" "))
+            .attr("fill", method.color).attr("fill-opacity", 0.15)
+            .attr("stroke", method.color).attr("stroke-width", 2)
+            .attr("stroke-opacity", 0.8);
+
+        // Dots at vertices
+        const dots = [];
+        points.forEach(p => {
+            const dot = svg.append("circle")
+                .attr("cx", p[0]).attr("cy", p[1]).attr("r", 4)
+                .attr("fill", method.color).attr("stroke", "#fff").attr("stroke-width", 1.5);
+            dots.push(dot);
+        });
+
+        polygons.push({poly, dots, method});
+    });
+
+    // Legend with hover
+    const legendDiv = document.getElementById("radar-legend");
+    RADAR_METHODS.forEach((method, idx) => {
+        const item = document.createElement("div");
+        item.className = "radar-legend-item";
+        item.innerHTML = `<span class="radar-legend-swatch" style="background:${method.color};"></span>${method.name}`;
+
+        item.addEventListener("mouseenter", () => {
+            polygons.forEach((p, i) => {
+                if (i === idx) {
+                    p.poly.attr("fill-opacity", 0.25).attr("stroke-width", 3).attr("stroke-opacity", 1);
+                    p.dots.forEach(d => d.attr("r", 5));
+                } else {
+                    p.poly.attr("fill-opacity", 0.04).attr("stroke-opacity", 0.2).attr("stroke-width", 1);
+                    p.dots.forEach(d => d.attr("r", 2).attr("opacity", 0.3));
+                }
+            });
+        });
+
+        item.addEventListener("mouseleave", () => {
+            polygons.forEach(p => {
+                p.poly.attr("fill-opacity", 0.15).attr("stroke-width", 2).attr("stroke-opacity", 0.8);
+                p.dots.forEach(d => d.attr("r", 4).attr("opacity", 1));
+            });
+        });
+
+        legendDiv.appendChild(item);
+    });
+})();
+
+</script>
+</body>
+</html>
