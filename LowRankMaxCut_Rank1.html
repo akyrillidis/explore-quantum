@@ -424,7 +424,7 @@ The naive approach recomputes this score from scratch: multiply \(\mathbf{Q}\mat
         When one node \(i\) flips from \(z_\text{old}\) to \(z_\text{new}\), the score change has a closed-form expression:
     </p>
     <div class="math-block">
-    $$\Delta = 2 \cdot \text{Re}\!\big(\overline{\delta z} \cdot (\mathbf{Q}\mathbf{z})_i\big) + |\delta z|^2 \cdot Q_{ii}$$
+    $$\Delta = 2 \cdot \text{Re}\big(\overline{\delta z} \cdot (\mathbf{Q}\mathbf{z})_i\big) + |\delta z|^2 \cdot Q_{ii}$$
     </div>
     <p>
         where \(\delta z = z_\text{new} - z_\text{old}\). This is \(O(1)\) per candidate. The catch is maintaining the cached product \(\mathbf{Q}\mathbf{z}\), which requires updating the rows affected by the flip: \((\mathbf{Q}\mathbf{z})_j \mathrel{+}= Q_{ji} \cdot \delta z\) for each neighbor \(j\) of node \(i\).
