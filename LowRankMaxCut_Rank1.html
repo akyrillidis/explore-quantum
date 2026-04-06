@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rank-1 as a Building Block for Million-Node Max-3-Cut</title>
+<meta property="og:title" content="Rank-1 as a Building Block for Million-Node Max-3-Cut" />
+<meta property="og:description" content="One algorithmic trick — incremental scoring — turns a 17-hour computation into 70 minutes, enabling million-node graph partitioning on a single CPU." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Rank-1 as a Building Block for Million-Node Max-3-Cut" />
+<meta name="twitter:description" content="Incremental scoring, 2-eigenvector rounding, and hybrid warm-starts for Max-3-Cut at extreme scale." />
+<meta name="keywords" content="Max-3-Cut, Max-K-Cut, combinatorial optimization, low-rank, incremental scoring, spectral methods, graph partitioning, hybrid solver" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Source+Sans+Pro:wght@400;600;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+    font-family: 'Source Serif Pro', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.7;
+    color: #222;
+    background: #fff;
+    margin: 0; padding: 0;
+}
+.container {
+    max-width: 912px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+@media screen and (max-width: 1000px) {
+    .container { max-width: 95%; padding: 0 12px; }
+    body { font-size: 15px; }
+}
+
+/* ===== TYPOGRAPHY ===== */
+h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.3;
+}
+h1 { font-size: 2.2em; margin-top: 0; }
+h2 { font-size: 1.6em; margin-top: 2.5em; border-bottom: 2px solid #648FFF; padding-bottom: 6px; }
+h3 { font-size: 1.2em; margin-top: 1.8em; color: #333; }
+p { margin: 1em 0; }
+a { color: #648FFF; text-decoration: none; }
+a:hover { color: #785EF0; text-decoration: underline; }
+code, .mono {
+    font-family: 'Fira Mono', monospace;
+    font-size: 0.85em;
+    background: #f4f4f8;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid #e0e0e0;
+}
+pre {
+    background: #f4f4f8;
+    border: 1px solid #d0d0d8;
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    line-height: 1.5;
+}
+pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.82em;
+}
+blockquote {
+    border-left: 4px solid #648FFF;
+    margin: 1.5em 0;
+    padding: 0.5em 1em;
+    background: #f8f9ff;
+    color: #444;
+}
+strong { font-weight: 600; }
+
+/* ===== HERO / TITLE ===== */
+.hero {
+    text-align: center;
+    padding: 60px 0 30px;
+}
+.hero h1 {
+    font-size: 2.4em;
+    margin-bottom: 0.3em;
+    color: #1a1a1a;
+}
+.hero .subtitle {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1.15em;
+    color: #555;
+    font-weight: 400;
+    margin-bottom: 1.2em;
+    font-style: italic;
+}
+.hero .authors {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1.0em;
+    color: #333;
+    margin-bottom: 0.3em;
+}
+.hero .affiliation {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 1em;
+}
+.hero .date {
+    font-size: 0.9em;
+    color: #888;
+    margin-bottom: 1em;
+}
+.hero .links a {
+    display: inline-block;
+    margin: 0 12px;
+    padding: 8px 20px;
+    background: #648FFF;
+    color: #fff;
+    border-radius: 5px;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 600;
+    font-size: 0.95em;
+    transition: background 0.2s;
+}
+.hero .links a:hover {
+    background: #785EF0;
+    text-decoration: none;
+}
+
+/* ===== SECTION DIVIDERS ===== */
+hr.section-divider {
+    border: 0;
+    height: 1px;
+    background-image: linear-gradient(to right, rgba(100,143,255,0), rgba(100,143,255,0.6), rgba(100,143,255,0));
+    margin: 3em 0 1em;
+}
+
+/* ===== TABLES ===== */
+table.results-tbl {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.5em 0;
+    font-size: 0.9em;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+table.results-tbl th, table.results-tbl td {
+    border: 1px solid #d0d0d8;
+    padding: 8px 12px;
+    text-align: center;
+}
+table.results-tbl th {
+    background: #f0f2ff;
+    font-weight: 600;
+    color: #333;
+}
+table.results-tbl th.sortable { cursor: pointer; user-select: none; }
+table.results-tbl th.sortable:hover { background: #dde0ff; }
+table.results-tbl tr:nth-child(even) { background: #fafbff; }
+table.results-tbl td.winner { background: #d4edda; font-weight: 600; }
+table.results-tbl td.best { background: #d4edda; font-weight: 600; }
+table.results-tbl td.second { background: #dce8ff; }
+
+/* ===== INTERACTIVE CONTAINERS ===== */
+.interactive-box {
+    border: 1px solid #d0d0d8;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 2em 0;
+    background: #fafbff;
+}
+.interactive-box .box-title {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 700;
+    font-size: 1.05em;
+    color: #648FFF;
+    margin-bottom: 12px;
+}
+.interactive-box .caption {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 10px;
+    text-align: center;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+/* ===== FILTER BUTTONS ===== */
+.filter-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+.filter-btn {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.85em;
+    padding: 5px 14px;
+    border: 1px solid #648FFF;
+    border-radius: 20px;
+    background: #fff;
+    color: #648FFF;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.filter-btn:hover, .filter-btn.active {
+    background: #648FFF;
+    color: #fff;
+}
+
+/* ===== LEGEND ===== */
+.legend-toggle {
+    display: flex; gap: 12px; justify-content: center;
+    flex-wrap: wrap; margin-bottom: 8px;
+    font-family: 'Source Sans Pro', sans-serif; font-size: 0.85em;
+}
+.legend-toggle label { cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.legend-toggle input { accent-color: #648FFF; }
+
+/* ===== INSIGHT BOX ===== */
+.insight-box {
+    border: 2px solid #648FFF;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 2em 0;
+    background: #f0f4ff;
+}
+.insight-box .insight-title {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 700;
+    font-size: 1.0em;
+    color: #648FFF;
+    margin-bottom: 8px;
+}
+.insight-box p { margin: 0.5em 0; }
+
+/* ===== CODE DIFF ===== */
+.code-diff {
+    background: #f4f4f8;
+    border: 1px solid #d0d0d8;
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    line-height: 1.5;
+    font-family: 'Fira Mono', monospace;
+    font-size: 0.82em;
+}
+.code-diff .removed { background: #fdd; color: #900; }
+.code-diff .added { background: #dfd; color: #060; }
+.code-diff .comment { color: #888; }
+
+/* ===== BIBTEX ===== */
+.bibtex-block {
+    background: #f4f4f8;
+    border: 1px solid #d0d0d8;
+    border-radius: 6px;
+    padding: 16px;
+    font-family: 'Fira Mono', monospace;
+    font-size: 0.78em;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+/* ===== FOOTER ===== */
+.footer {
+    text-align: center;
+    padding: 40px 0;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.85em;
+    color: #888;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 3em;
+}
+
+/* ===== MATH DISPLAY ===== */
+.math-block {
+    overflow-x: auto;
+    padding: 8px 0;
+}
+
+/* ===== METRIC CARDS ===== */
+.metric-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 2em 0;
+}
+.metric-card {
+    border: 1px solid #d0d0d8;
+    border-radius: 8px;
+    padding: 20px 24px;
+    text-align: center;
+    background: #fafbff;
+    flex: 1;
+    min-width: 180px;
+    max-width: 220px;
+}
+.metric-card .metric-value {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 2.2em;
+    font-weight: 700;
+    color: #648FFF;
+    line-height: 1.2;
+}
+.metric-card .metric-label {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 6px;
+}
+
+/* ===== NOSCRIPT ===== */
+noscript .static-fallback {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- SECTION 0: TITLE / HERO                                      -->
+<!-- ============================================================ -->
+<div class="container">
+<div class="hero">
+    <h1>Rank-1 as a Building Block for Million-Node Max-3-Cut</h1>
+    <div class="subtitle">Incremental scoring, 2-eigenvector rounding, and hybrid warm-starts at extreme scale</div>
+    <div class="authors">Ria Stevens, Fangshuo Liao, Barbara Su, Jianqiang Li, Anastasios Kyrillidis</div>
+    <div class="affiliation">Department of Computer Science, Rice University</div>
+    <div class="date">April 2026</div>
+    <div class="links">
+        <a href="https://arxiv.org/abs/2602.20376">Paper</a>
+        <a href="https://github.com/barbara-su/MaxKCutParallel">Code</a>
+        <a href="LowRankMaxCut_GPU.html">Blog 1: 15 GPUs</a>
+    </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 1: THE SETUP                                         -->
+<!-- ============================================================ -->
+<h2>1. From GPUs to a Single CPU</h2>
+
+<p>
+In our <a href="LowRankMaxCut_GPU.html">previous post</a>, we threw 15 GPUs at Max-3-Cut and pushed the rank-2 algorithm to \(n = 3{,}600\) nodes. The rank-2 approach is powerful &mdash; it enumerates \(O(n^3)\) candidate solutions and provably contains the global optimizer when the objective has rank 2 &mdash; but its cubic scaling hits a wall around a few thousand nodes, even with parallelism.
+</p>
+
+<p>
+What if we drop one rank? The <strong>rank-1</strong> algorithm reduces the candidate set to \(O(n)\) and needs no GPU at all. The trade-off seems clear: less computation, worse quality. But three algorithmic insights change this picture dramatically:
+</p>
+
+<ol>
+    <li><strong>Incremental scoring</strong> &mdash; exploit sparsity to evaluate candidates in \(O(n \cdot d)\) total instead of \(O(n^2)\)</li>
+    <li><strong>2-eigenvector complex rounding</strong> &mdash; fix a degeneracy that was losing one-third of the solution space</li>
+    <li><strong>Hybrid warm-start</strong> &mdash; use the rank-1 solution to seed greedy local search</li>
+</ol>
+
+<p>
+Together, these let us solve million-node graphs in minutes on a laptop-class CPU &mdash; and the hybrid solver beats greedy local search on every single instance we tested.
+</p>
+
+<h3>Rank-1 as a standalone solver and as an initializer</h3>
+
+<p>
+A key theme of this work is that rank-1 serves a <em>dual role</em>. As a <strong>standalone solver</strong>, the rank-1 phase sweep produces a complete partition by rounding eigenvector phases to roots of unity. On graphs with strong spectral structure &mdash; torus, lattice, and other highly regular families &mdash; this solution is already optimal or near-optimal. On torus graphs, rank-1 beats every other method we tested, including simulated annealing.
+</p>
+
+<p>
+But rank-1 also serves as an <strong>initializer</strong> for other algorithms. Local search methods like greedy hill-climbing are fast but trapped by their starting point: from a random initialization, they converge to whatever local optimum is nearest. The rank-1 solution provides a <em>spectrally informed</em> starting point that encodes global structure of the graph &mdash; information that pure local search is blind to. We call this combination <strong>Hybrid</strong>: run rank-1 first, then run greedy local search starting from the rank-1 partition instead of a random one.
+</p>
+
+<p>
+The distinction matters because the hybrid solver is not simply &ldquo;rank-1 but better.&rdquo; It is a <em>different algorithm</em> that composes spectral global information (rank-1) with local optimization (greedy). The two components have complementary strengths: rank-1 captures global structure but ignores local details; greedy refines local details but is blind to global structure. Together, they consistently outperform either method alone.
+</p>
+
+<div class="metric-row">
+    <div class="metric-card">
+        <div class="metric-value">1M</div>
+        <div class="metric-label">nodes solved</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">45/45</div>
+        <div class="metric-label">hybrid beats greedy</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">0 GPUs</div>
+        <div class="metric-label">required</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">~10 lines</div>
+        <div class="metric-label">of new code</div>
+    </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 2: THE BOTTLENECK                                    -->
+<!-- ============================================================ -->
+<h2>2. The \(O(n^2)\) Bottleneck</h2>
+
+<p>
+Recall the setup. Given a graph Laplacian \(\mathbf{Q}\) and its top eigenvector \(\mathbf{v}\), the rank-1 phase sweep constructs an initial partition \(\mathbf{z}\) from \(\mathbf{v}\)'s phases, then sweeps through \(n\) boundary points, flipping one node at a time. At each step, we need the new score \(\mathbf{z}^\dagger \mathbf{Q} \mathbf{z}\).
+</p>
+
+<p>
+The naive approach recomputes this score from scratch: multiply \(\mathbf{Q}\mathbf{z}\), then dot with \(\mathbf{z}\). Each evaluation costs \(O(\text{nnz})\) for a sparse matrix with nnz non-zeros. Over \(n\) sweeps, the total is \(O(n \cdot \text{nnz})\). For a 5-regular graph (where nnz \(= 5n\)), this gives \(O(n^2)\) &mdash; manageable at \(n = 1{,}000\), but 17 hours at \(n = 100{,}000\).
+</p>
+
+<div class="insight-box">
+    <div class="insight-title">The key observation</div>
+    <p>
+        When one node \(i\) flips from \(z_\text{old}\) to \(z_\text{new}\), the score change has a closed-form expression:
+    </p>
+    <div class="math-block">
+    $$\Delta = 2 \cdot \text{Re}\!\big(\overline{\delta z} \cdot (\mathbf{Q}\mathbf{z})_i\big) + |\delta z|^2 \cdot Q_{ii}$$
+    </div>
+    <p>
+        where \(\delta z = z_\text{new} - z_\text{old}\). This is \(O(1)\) per candidate. The catch is maintaining the cached product \(\mathbf{Q}\mathbf{z}\), which requires updating the rows affected by the flip: \((\mathbf{Q}\mathbf{z})_j \mathrel{+}= Q_{ji} \cdot \delta z\) for each neighbor \(j\) of node \(i\).
+    </p>
+</div>
+
+<p>
+For a graph with average degree \(d\), each update touches \(d\) entries. Over \(n\) flips, the total cost is \(O(n \cdot d)\) instead of \(O(n^2)\). On a 5-regular graph, that is a \(n/5\) speedup &mdash; a factor of 20,000 at \(n = 100{,}000\).
+</p>
+
+<h3>The sparse update in code</h3>
+
+<p>
+The critical implementation detail: directly index into the CSC sparse matrix structure. A seemingly equivalent approach &mdash; <code>Q.getcol(i).toarray()</code> &mdash; allocates an \(n\)-dimensional vector on every call, turning \(O(d)\) into \(O(n)\).
+</p>
+
+<div class="code-diff">
+<span class="comment"># The wrong way: O(n) per update due to dense allocation</span>
+<span class="removed">col = Q_csc.getcol(i).toarray().flatten()
+Qz += col * dz</span>
+
+<span class="comment"># The right way: O(degree) per update via direct CSC access</span>
+<span class="added">start = Q_csc.indptr[i]
+end   = Q_csc.indptr[i + 1]
+rows  = Q_csc.indices[start:end]
+vals  = Q_csc.data[start:end]
+Qz[rows] += vals * dz</span>
+</div>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 3: EIGENVECTOR ROUNDING                              -->
+<!-- ============================================================ -->
+<h2>3. Fixing the Rounding: Two Eigenvectors for Three Partitions</h2>
+
+<p>
+For Max-3-Cut, we need to assign each node to one of three partitions, represented by the cube roots of unity: \(\{1, \omega, \omega^2\}\) where \(\omega = e^{2\pi i/3}\). The rank-1 algorithm maps eigenvector entries to partitions based on their complex phase angles.
+</p>
+
+<p>
+The problem: graph Laplacians are real symmetric, so their eigenvectors are real-valued. A real number has a complex phase of either 0 or \(\pi\), mapping to at most 2 of the 3 partitions. One-third of the solution space is unreachable.
+</p>
+
+<div class="insight-box">
+    <div class="insight-title">2-eigenvector complex rounding</div>
+    <p>
+        Instead of using a single real eigenvector, combine the top two:
+    </p>
+    <div class="math-block">
+    $$q_i = v_1(i) + j \cdot v_2(i)$$
+    </div>
+    <p>
+        Now \(\text{arg}(q_i)\) spans the full \([0, 2\pi)\) circle, and all three partitions are reachable. The cost is one extra eigenvalue computation &mdash; negligible compared to the sweep.
+    </p>
+</div>
+
+<p>
+The effect on torus graphs is striking: with the fix, rank-1 finds the best solution among all methods, including simulated annealing. Without it, rank-1 is limited to a bipartition of a 3-colorable structure.
+</p>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 4: SCALING RESULTS                                   -->
+<!-- ============================================================ -->
+<h2>4. Scaling to a Million Nodes</h2>
+
+<p>
+With incremental scoring, the sweep phase scales linearly in \(n \cdot d\). The bottleneck shifts to the eigenvalue computation (ARPACK via <code>scipy.sparse.linalg.eigsh</code>), which scales roughly as \(O(\text{nnz} \cdot k_\text{iter})\).
+</p>
+
+<div class="interactive-box" id="timing-box">
+    <div class="box-title">Rank-1 timing breakdown on 5-regular graphs</div>
+    <div id="timing-chart"></div>
+    <div class="caption">Sweep time grows linearly with n. Eigensolve dominates at large n due to ARPACK iteration count.</div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 5: MAIN RESULTS                                      -->
+<!-- ============================================================ -->
+<h2>5. Results: 45 Instances from 10K to 1M Nodes</h2>
+
+<p>
+We tested five methods on 45 graph instances across five families: 5-regular, toroidal grid, Erd&#337;s&ndash;R&eacute;nyi, Delaunay triangulations, and road networks.
+</p>
+
+<h3>Methods</h3>
+
+<ul>
+    <li><strong>Random:</strong> best of 1,000 random \(K\)-colorings. A random partition achieves \((1 - 1/K)\) of the total edge weight in expectation, providing the baseline.</li>
+    <li><strong>Rank-1:</strong> 2-eigenvector phase sweep with incremental scoring (this work).</li>
+    <li><strong>Greedy:</strong> steepest-ascent local search from random initialization. Each iteration moves one node to the partition that maximizes the cut increase; the algorithm terminates when no improving move exists. This is the natural generalization to Max-\(K\)-Cut of the classic Max-Cut swap heuristic, which guarantees a \((1-1/K)\)-approximation <a href="#ref-frieze">[1]</a>. We use incremental scoring for \(O(\text{degree})\) per move.</li>
+    <li><strong>Hybrid:</strong> greedy local search warm-started from the rank-1 solution instead of a random partition.</li>
+    <li><strong>SA:</strong> simulated annealing <a href="#ref-sa">[2]</a> with Metropolis acceptance and geometric cooling. The initial temperature is calibrated so that typical worsening moves (of magnitude \(\sim 2d\), where \(d\) is the average degree) are accepted with probability \(\sim 50\%\).</li>
+</ul>
+
+<h3>Graphs</h3>
+
+<p>
+<strong>Synthetic:</strong> We test on three standard graph families at sizes \(n = 10{,}000\) to \(n = 1{,}000{,}000\), each with 3 random seeds: 5-regular (every node has exactly 5 neighbors), toroidal grid (periodic 2D lattice), and Erd&#337;s&ndash;R&eacute;nyi \(G(n, 10/n)\).
+</p>
+
+<p>
+<strong>Real-world:</strong> We include two families from standard benchmark collections:
+</p>
+<ul>
+    <li><strong>Delaunay triangulations</strong> (n = 1K to 524K) from the SuiteSparse Matrix Collection <a href="#ref-suitesparse">[3]</a>. These represent the edge structure of Delaunay triangulations of random point sets in 2D &mdash; planar, sparse, geometrically structured graphs that arise naturally in mesh generation and finite element methods.</li>
+    <li><strong>Road networks</strong> (n = 1.09M and 1.38M) from the Stanford Network Analysis Project (SNAP) <a href="#ref-snap">[4]</a>. <code>roadNet-PA</code> and <code>roadNet-TX</code> are the full road networks of Pennsylvania and Texas, where nodes represent intersections and edges represent road segments. These are large, sparse, near-planar graphs with low average degree and pronounced geographic community structure.</li>
+</ul>
+
+<div class="interactive-box" id="results-box">
+    <div class="box-title">Score ratios relative to Greedy (higher is better)</div>
+    <div class="filter-bar" id="family-filter"></div>
+    <div id="results-table-container"></div>
+    <div class="caption">Green = best score. Blue = second best. Click column headers to sort.</div>
+</div>
+
+<h3>The headline: Hybrid wins every time</h3>
+
+<p>
+Across all 45 instances, the hybrid solver (rank-1 + greedy) produces a better cut than greedy alone. The margin ranges from +0.3% on road networks to +3.9% on torus graphs. This is not a fluke &mdash; the spectral warm-start consistently guides greedy to a better local optimum.
+</p>
+
+<div class="interactive-box" id="comparison-box">
+    <div class="box-title">Score comparison across scales (averaged over 3 seeds)</div>
+    <div class="filter-bar" id="chart-family-filter"></div>
+    <div id="comparison-chart"></div>
+    <div class="caption">Hover over data points for exact values. Hybrid consistently outperforms Greedy.</div>
+</div>
+
+<h3>Torus: Rank-1 is king</h3>
+
+<p>
+On toroidal grids, rank-1 beats every other method at every scale from 10K to 1M nodes. The spectral structure of the torus is perfectly captured by two eigenvectors. Greedy, which is blind to global structure, finds a solution 3.9% worse. Even SA &mdash; with its ability to escape local optima &mdash; falls 0.5&ndash;2.1% short.
+</p>
+
+<h3>Regular: Hybrid overtakes SA at scale</h3>
+
+<p>
+On 5-regular graphs, SA is the best method at \(n \leq 100{,}000\), beating hybrid by about 1%. But at \(n \geq 500{,}000\), the tables turn: SA's fixed iteration budget becomes insufficient, while hybrid's warm-start advantage holds. At \(n = 1{,}000{,}000\), hybrid beats SA by 1.1%.
+</p>
+
+<h3>Real-world: Hybrid still helps</h3>
+
+<p>
+On Delaunay meshes (1K&ndash;524K nodes) and road networks (1M+ nodes), rank-1 alone is weak &mdash; only 66&ndash;80% of greedy. These graphs lack the clean spectral structure of torus or regular graphs. But the hybrid warm-start still adds 0.3&ndash;1.1% over greedy, demonstrating that even a mediocre spectral starting point beats a random one.
+</p>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 6: HONEST ASSESSMENT                                 -->
+<!-- ============================================================ -->
+<h2>6. Honest Assessment</h2>
+
+<h3>Where spectral methods shine</h3>
+
+<ul>
+    <li><strong>Structured graphs:</strong> On torus and lattice graphs, rank-1 is the best available method. No metaheuristic needed.</li>
+    <li><strong>Warm-starting:</strong> Hybrid beats greedy in 100% of instances (45/45). Even when rank-1 quality is poor, the starting point is better than random.</li>
+    <li><strong>Scale advantage over SA:</strong> At \(n \geq 500{,}000\), SA's per-iteration budget runs out. Hybrid's quality advantage persists or grows.</li>
+</ul>
+
+<h3>Where spectral methods struggle</h3>
+
+<ul>
+    <li><strong>Unstructured graphs:</strong> On Erd&#337;s&ndash;R&eacute;nyi graphs, rank-1 captures only 89&ndash;90% of greedy's score. The spectral structure is too diffuse.</li>
+    <li><strong>Real-world graphs:</strong> Delaunay meshes and road networks are irregular. Rank-1 gets 66&ndash;80% of greedy.</li>
+    <li><strong>Timing:</strong> The eigensolve (ARPACK) dominates at large \(n\). Hybrid is 15&ndash;35&times; slower than pure greedy at \(n = 1{,}000{,}000\). The value proposition is quality, not speed.</li>
+</ul>
+
+<div class="interactive-box" id="timing-comparison-box">
+    <div class="box-title">Time vs. score quality trade-off</div>
+    <div id="tradeoff-chart"></div>
+    <div class="caption">Each dot is one instance. X-axis: wall-clock time (log scale). Y-axis: score as ratio to best known. Hover for details.</div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 7: WHAT'S NEXT                                       -->
+<!-- ============================================================ -->
+<h2>7. What This Enables</h2>
+
+<p>
+Rank-1 is a building block, not the final product. Three directions build on it:
+</p>
+
+<h3>7.1 Randomized rank-\(r\)</h3>
+
+<p>
+The rank-2 algorithm enumerates \(O(n^3)\) candidates, which is intractable for large \(n\). But preliminary experiments show that <strong>random sampling of just 0.1% of rank-2 candidates recovers 99.8% of the exact optimum</strong>. If this holds at larger \(n\), it would make rank-2 practical at \(n = 10{,}000+\) without any GPUs.
+</p>
+
+<h3>7.2 Rank-1 guided search for rank-2</h3>
+
+<p>
+Can the rank-1 solution help make rank-2 more efficient? The connection is not obvious &mdash; the two algorithms operate in different spaces &mdash; but there are several plausible mechanisms:
+</p>
+
+<ul>
+    <li><strong>Score pruning.</strong> The rank-1 score provides a <em>lower bound</em>: any rank-2 candidate that scores below the rank-1 solution can be skipped. Combined with cheap upper-bound estimates from partial evaluation, this could prune large portions of the rank-2 candidate space.</li>
+
+    <li><strong>Biased sampling.</strong> In the randomized rank-2 approach, instead of sampling candidate tuples uniformly, we can bias sampling toward candidates that produce partitions <em>similar</em> to the rank-1 solution. The intuition: rank-1 captures the dominant spectral direction, and the rank-2 optimum is likely a refinement of rank-1 rather than a completely different partition. Concretely, the rank-1 sweep identifies \(n\) boundary events ordered by their phase offsets \(\phi\). The boundaries with the largest score jumps indicate the most &ldquo;important&rdquo; hyperplanes. If we fix one of the three hyperplane indices in a rank-2 tuple to these critical boundaries and only sample the remaining two, we reduce the search from \(O(n^3)\) to \(O(n^2)\) with a spectral prior on where to look.</li>
+
+    <li><strong>Coarse-to-fine refinement.</strong> The rank-1 solution classifies each node as &ldquo;confident&rdquo; (far from any partition boundary) or &ldquo;uncertain&rdquo; (near a boundary). We can freeze the confident nodes and run rank-2 only on the uncertain subset, reducing the effective \(n\). For structured graphs where rank-1 is already strong, most nodes are confident, making rank-2 tractable on the residual subgraph.</li>
+</ul>
+
+<p>
+These ideas remain to be validated experimentally. Whether a rigorous theoretical connection exists &mdash; e.g., a bound on how many rank-2 candidates fall &ldquo;near&rdquo; the rank-1 optimum &mdash; is an open question.
+</p>
+
+<h3>7.3 Spectral suitability prediction</h3>
+
+<p>
+Our results show a clear pattern: rank-1 excels on graphs with strong spectral structure (large eigengap, low effective rank) and struggles on spectrally diffuse graphs. The eigengap \(\lambda_1 - \lambda_2\) and the ratio \(\lambda_1 / \text{tr}(\mathbf{Q})\) may predict <em>when</em> spectral methods will outperform metaheuristics, enabling algorithm selection before solving.
+</p>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 8: CODE & REPRODUCIBILITY                            -->
+<!-- ============================================================ -->
+<h2>8. Code &amp; Reproducibility</h2>
+
+<p>
+All code and experiment scripts are available on GitHub:
+</p>
+
+<p style="text-align:center; font-size:1.1em;">
+    <a href="https://github.com/barbara-su/MaxKCutParallel">github.com/barbara-su/MaxKCutParallel</a>
+</p>
+
+<h3>Quick start</h3>
+<pre><code># Rank-1 + Hybrid (single CPU, any graph size)
+python src/hybrid.py --q_path data/Q.npy --v_path data/V.npy --K 3
+
+# Generate a 5-regular graph and solve
+python src/graph_generators/gen_regular_random.py --n 100000 --degree 5 --rank 2 --seed 42
+python src/hybrid.py --q_path instances/regular/Q_regular_100000_seed_42.npy \
+                     --v_path instances/regular/V_regular_100000_seed_42.npy --K 3
+
+# Compare all baselines
+python src/baselines.py --q_path data/Q.npy --K 3 --methods random,greedy,sa</code></pre>
+
+<h3>References</h3>
+<ol style="font-size: 0.9em; font-family: 'Source Sans Pro', sans-serif; line-height: 1.8;">
+    <li id="ref-frieze">A. Frieze and M. Jerrum. &ldquo;Improved Approximation Algorithms for MAX k-CUT and MAX BISECTION.&rdquo; <em>Algorithmica</em>, 18(1):67&ndash;81, 1997.</li>
+    <li id="ref-sa">S. Kirkpatrick, C. D. Gelatt Jr., and M. P. Vecchi. &ldquo;Optimization by Simulated Annealing.&rdquo; <em>Science</em>, 220(4598):671&ndash;680, 1983.</li>
+    <li id="ref-suitesparse">T. A. Davis and Y. Hu. &ldquo;The University of Florida Sparse Matrix Collection.&rdquo; <em>ACM Transactions on Mathematical Software</em>, 38(1):1&ndash;25, 2011.</li>
+    <li id="ref-snap">J. Leskovec and A. Krevl. &ldquo;SNAP Datasets: Stanford Large Network Dataset Collection.&rdquo; <a href="http://snap.stanford.edu/data">snap.stanford.edu/data</a>, 2014.</li>
+</ol>
+
+<h3>Citation</h3>
+<div class="bibtex-block">@article{Stevens2025maxkcut,
+  title   = {Exploiting Low-Rank Structure in Max-$K$-Cut Problems},
+  author  = {Stevens, Ria and Liao, Fangshuo and Su, Barbara
+             and Li, Jianqiang and Kyrillidis, Anastasios},
+  journal = {arXiv preprint arXiv:2602.20376},
+  year    = {2025}
+}</div>
+
+<hr class="section-divider">
+
+<div class="footer">
+    <p>
+        &copy; 2026 Kyrillidis Lab, Rice University.
+        Built with <a href="https://d3js.org">D3.js</a> and <a href="https://www.mathjax.org">MathJax</a>.
+        Part of the <a href="https://akyrillidis.github.io/explore-quantum/">QUANTAS</a> project.
+    </p>
+    <p>
+        See also: <a href="LowRankMaxCut_GPU.html">Blog 1: What Can 15 Obsolete GPUs Do?</a>
+        &bull; <a href="https://akyrillidis.github.io/explore-quantum/MaxKCut.html">Blog: Max-K-Cut Overview</a>
+    </p>
+</div>
+
+</div><!-- .container -->
+
+<!-- ============================================================ -->
+<!-- D3.js INTERACTIVE VISUALIZATIONS                              -->
+<!-- ============================================================ -->
+<script>
+// ===== DATA =====
+const DATA = [
+    // Regular graphs
+    {family:"Regular", n:10000, random:50719, rank1:70195, greedy:70337, hybrid:72742, sa:73365, r1_time:0.33, g_time:0.1, h_time:0.37, sa_time:18.8, sweep_time:0.1185, eig_time:0.21},
+    {family:"Regular", n:50000, random:251502, rank1:350448, greedy:351697, hybrid:363661, sa:367600, r1_time:2.4, g_time:0.5, h_time:2.6, sa_time:90.7, sweep_time:0.6638, eig_time:1.74},
+    {family:"Regular", n:100000, random:502177, rank1:701023, greedy:703604, hybrid:727090, sa:734220, r1_time:7.0, g_time:0.8, h_time:7.2, sa_time:185.2, sweep_time:1.2696, eig_time:5.73},
+    {family:"Regular", n:500000, random:2505383, rank1:3502759, greedy:3518063, hybrid:3635728, sa:3614673, r1_time:125.3, g_time:4.2, h_time:126.4, sa_time:1064.3, sweep_time:6.361, eig_time:118.9},
+    {family:"Regular", n:1000000, random:5006798, rank1:7004917, greedy:7036050, hybrid:7272074, sa:7190704, r1_time:279.8, g_time:8.5, h_time:282.2, sa_time:2526.0, sweep_time:13.14, eig_time:266.7},
+    // Torus graphs
+    {family:"Torus", n:10000, random:40455, rank1:59640, greedy:57408, hybrid:59640, sa:59301, r1_time:0.3, g_time:0.1, h_time:0.3, sa_time:19.2, sweep_time:0.1154, eig_time:0.18},
+    {family:"Torus", n:50000, random:201024, rank1:299568, greedy:288255, hybrid:299568, sa:298098, r1_time:2.87, g_time:0.4, h_time:2.87, sa_time:93.8, sweep_time:0.649, eig_time:2.22},
+    {family:"Torus", n:100000, random:401559, rank1:599414, greedy:577041, hybrid:599418, sa:595788, r1_time:9.0, g_time:0.7, h_time:9.0, sa_time:198.7, sweep_time:1.24, eig_time:7.76},
+    {family:"Torus", n:500000, random:2003895, rank1:3000000, greedy:2888835, hybrid:3000000, sa:2953218, r1_time:185.6, g_time:3.4, h_time:185.7, sa_time:1040.9, sweep_time:5.94, eig_time:179.7},
+    {family:"Torus", n:1000000, random:4004784, rank1:5998182, greedy:5774904, hybrid:5998182, sa:5871978, r1_time:736.9, g_time:6.9, h_time:737.1, sa_time:2375.3, sweep_time:11.85, eig_time:725.0},
+    // ER graphs
+    {family:"Erd\u0151s\u2013R\u00e9nyi", n:10000, random:100959, rank1:118576, greedy:131213, hybrid:132769, sa:135575, r1_time:0.2, g_time:0.1, h_time:0.2, sa_time:19.0, sweep_time:0.1204, eig_time:0.08},
+    {family:"Erd\u0151s\u2013R\u00e9nyi", n:50000, random:502417, rank1:590552, greedy:655457, hybrid:662346, sa:677954, r1_time:0.9, g_time:0.5, h_time:1.23, sa_time:92.2, sweep_time:0.706, eig_time:0.19},
+    {family:"Erd\u0151s\u2013R\u00e9nyi", n:100000, random:1004041, rank1:1172775, greedy:1312846, hybrid:1326664, sa:1354862, r1_time:1.87, g_time:1.0, h_time:2.57, sa_time:181.2, sweep_time:1.41, eig_time:0.46},
+    // Real-world graphs
+    {family:"Delaunay", n:1024, random:6339, rank1:6366, greedy:7950, hybrid:8037, sa:8439, r1_time:0.01, g_time:0.01, h_time:0.02, sa_time:18.7, sweep_time:0.014, eig_time:0.001},
+    {family:"Delaunay", n:8192, random:49755, rank1:48330, greedy:63987, hybrid:64419, sa:66918, r1_time:0.2, g_time:0.1, h_time:0.22, sa_time:18.9, sweep_time:0.11, eig_time:0.09},
+    {family:"Delaunay", n:65536, random:394965, rank1:339027, greedy:511428, hybrid:514326, sa:536022, r1_time:1.4, g_time:0.5, h_time:2.1, sa_time:118.8, sweep_time:1.02, eig_time:0.38},
+    {family:"Delaunay", n:524288, random:3151473, rank1:2784120, greedy:4094151, hybrid:4112139, sa:4213743, r1_time:54.4, g_time:4.0, h_time:59.5, sa_time:1117.8, sweep_time:53.3, eig_time:1.1},
+    {family:"Road Net", n:1088092, random:3088995, rank1:3173553, greedy:4503999, hybrid:4539057, sa:4581765, r1_time:203.0, g_time:6.4, h_time:208.8, sa_time:1800.0, sweep_time:198.9, eig_time:4.1},
+    {family:"Road Net", n:1379917, random:3848550, rank1:4032492, greedy:5619369, hybrid:5638095, sa:5705913, r1_time:292.6, g_time:8.0, h_time:301.0, sa_time:1800.0, sweep_time:288.4, eig_time:4.2},
+];
+
+// Color scheme
+const COLORS = {
+    random: "#999999",
+    rank1: "#648FFF",
+    greedy: "#FE6100",
+    hybrid: "#785EF0",
+    sa: "#DC267F"
+};
+
+const METHOD_NAMES = {
+    random: "Random",
+    rank1: "Rank-1",
+    greedy: "Greedy",
+    hybrid: "Hybrid",
+    sa: "SA"
+};
+
+// ===== TIMING BREAKDOWN CHART =====
+(function() {
+    const box = d3.select("#timing-chart");
+    const W = 860, H = 380;
+    const margin = {top: 30, right: 30, bottom: 60, left: 80};
+    const w = W - margin.left - margin.right;
+    const h = H - margin.top - margin.bottom;
+
+    const svg = box.append("svg")
+        .attr("viewBox", `0 0 ${W} ${H}`)
+        .attr("width", "100%");
+
+    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Use regular graph data for timing
+    const regData = DATA.filter(d => d.family === "Regular");
+
+    const x = d3.scaleLog().domain([8000, 1200000]).range([0, w]);
+    const y = d3.scaleLog().domain([0.05, 800]).range([h, 0]);
+
+    g.append("g").attr("transform", `translate(0,${h})`).call(d3.axisBottom(x).ticks(5).tickFormat(d => d >= 1000000 ? d/1000000+"M" : d >= 1000 ? d/1000+"K" : d));
+    g.append("g").call(d3.axisLeft(y).ticks(6).tickFormat(d => d >= 1 ? d+"s" : (d*1000)+"ms"));
+
+    g.append("text").attr("x", w/2).attr("y", h+45).attr("text-anchor", "middle")
+        .style("font-family", "Source Sans Pro, sans-serif").style("font-size", "14px").text("Graph size (n)");
+    g.append("text").attr("transform", "rotate(-90)").attr("y", -60).attr("x", -h/2).attr("text-anchor", "middle")
+        .style("font-family", "Source Sans Pro, sans-serif").style("font-size", "14px").text("Time (seconds)");
+
+    // Lines
+    const lineGen = (key) => d3.line().x(d => x(d.n)).y(d => y(d[key]));
+
+    const series = [
+        {key: "sweep_time", label: "Phase sweep", color: "#648FFF"},
+        {key: "eig_time", label: "Eigensolve", color: "#DC267F"},
+        {key: "r1_time", label: "Total rank-1", color: "#785EF0", dash: "6,3"},
+    ];
+
+    series.forEach(s => {
+        g.append("path").datum(regData)
+            .attr("fill", "none")
+            .attr("stroke", s.color)
+            .attr("stroke-width", 2.5)
+            .attr("stroke-dasharray", s.dash || "none")
+            .attr("d", lineGen(s.key));
+
+        g.selectAll(`.dot-${s.key}`).data(regData).enter().append("circle")
+            .attr("cx", d => x(d.n)).attr("cy", d => y(d[s.key]))
+            .attr("r", 5).attr("fill", s.color).attr("stroke", "#fff").attr("stroke-width", 1.5);
+    });
+
+    // Legend
+    const legend = g.append("g").attr("transform", `translate(${w-200}, 10)`);
+    series.forEach((s, i) => {
+        const lg = legend.append("g").attr("transform", `translate(0,${i*22})`);
+        lg.append("line").attr("x1", 0).attr("x2", 24).attr("y1", 0).attr("y2", 0)
+            .attr("stroke", s.color).attr("stroke-width", 2.5).attr("stroke-dasharray", s.dash || "none");
+        lg.append("text").attr("x", 30).attr("y", 4).text(s.label)
+            .style("font-family", "Source Sans Pro, sans-serif").style("font-size", "13px");
+    });
+})();
+
+// ===== RESULTS TABLE =====
+(function() {
+    const container = d3.select("#results-table-container");
+    const filterBar = d3.select("#family-filter");
+
+    const families = [...new Set(DATA.map(d => d.family))];
+    let activeFamily = "All";
+
+    // Build filter buttons
+    filterBar.append("button").attr("class", "filter-btn active").text("All").on("click", function() {
+        activeFamily = "All"; updateTable(); d3.selectAll("#family-filter .filter-btn").classed("active", false); d3.select(this).classed("active", true);
+    });
+    families.forEach(f => {
+        filterBar.append("button").attr("class", "filter-btn").text(f).on("click", function() {
+            activeFamily = f; updateTable(); d3.selectAll("#family-filter .filter-btn").classed("active", false); d3.select(this).classed("active", true);
+        });
+    });
+
+    let sortKey = "n", sortAsc = true;
+
+    function updateTable() {
+        container.html("");
+        let data = activeFamily === "All" ? DATA : DATA.filter(d => d.family === activeFamily);
+
+        data = [...data].sort((a, b) => sortAsc ? a[sortKey] - b[sortKey] : b[sortKey] - a[sortKey]);
+
+        const table = container.append("table").attr("class", "results-tbl");
+        const headers = [
+            {key: "family", label: "Family"},
+            {key: "n", label: "n"},
+            {key: "rank1_ratio", label: "R1/Greedy"},
+            {key: "hybrid_ratio", label: "Hybrid/Greedy"},
+            {key: "sa_ratio", label: "SA/Greedy"},
+            {key: "g_time", label: "Greedy Time"},
+            {key: "h_time", label: "Hybrid Time"},
+            {key: "sa_time", label: "SA Time"},
+        ];
+
+        const thead = table.append("thead").append("tr");
+        headers.forEach(h => {
+            thead.append("th").attr("class", "sortable").text(h.label).on("click", () => {
+                if (sortKey === h.key) sortAsc = !sortAsc; else { sortKey = h.key; sortAsc = true; }
+                updateTable();
+            });
+        });
+
+        const tbody = table.append("tbody");
+        data.forEach(d => {
+            const r1r = d.rank1 / d.greedy;
+            const hr = d.hybrid / d.greedy;
+            const sar = d.sa / d.greedy;
+            d.rank1_ratio = r1r;
+            d.hybrid_ratio = hr;
+            d.sa_ratio = sar;
+
+            const ratios = [r1r, hr, sar];
+            const maxR = Math.max(...ratios);
+            const sortedR = [...ratios].sort((a,b) => b-a);
+            const secondR = sortedR[1];
+
+            const row = tbody.append("tr");
+            row.append("td").text(d.family);
+            row.append("td").text(d.n >= 1000000 ? (d.n/1000000).toFixed(1)+"M" : d.n >= 1000 ? (d.n/1000)+"K" : d.n);
+
+            [r1r, hr, sar].forEach(v => {
+                const td = row.append("td").text(v.toFixed(4));
+                if (v === maxR) td.attr("class", "best");
+                else if (v === secondR) td.attr("class", "second");
+            });
+
+            row.append("td").text(d.g_time < 1 ? d.g_time.toFixed(1)+"s" : d.g_time.toFixed(0)+"s");
+            row.append("td").text(d.h_time < 1 ? d.h_time.toFixed(1)+"s" : d.h_time.toFixed(0)+"s");
+            row.append("td").text(d.sa_time < 1 ? d.sa_time.toFixed(1)+"s" : d.sa_time.toFixed(0)+"s");
+        });
+    }
+
+    updateTable();
+})();
+
+// ===== COMPARISON CHART =====
+(function() {
+    const box = d3.select("#comparison-chart");
+    const filterBar = d3.select("#chart-family-filter");
+    const W = 860, H = 420;
+    const margin = {top: 30, right: 30, bottom: 60, left: 80};
+    const w = W - margin.left - margin.right;
+    const h = H - margin.top - margin.bottom;
+
+    let activeFamily = "Regular";
+
+    const families = [...new Set(DATA.map(d => d.family))];
+    families.forEach((f, i) => {
+        filterBar.append("button")
+            .attr("class", "filter-btn" + (i === 0 ? " active" : ""))
+            .text(f)
+            .on("click", function() {
+                activeFamily = f;
+                d3.selectAll("#chart-family-filter .filter-btn").classed("active", false);
+                d3.select(this).classed("active", true);
+                updateChart();
+            });
+    });
+
+    const svg = box.append("svg")
+        .attr("viewBox", `0 0 ${W} ${H}`)
+        .attr("width", "100%");
+
+    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const tooltip = d3.select("body").append("div")
+        .style("position", "absolute").style("background", "#fff").style("border", "1px solid #ccc")
+        .style("border-radius", "4px").style("padding", "8px 12px").style("font-size", "13px")
+        .style("font-family", "Source Sans Pro, sans-serif").style("pointer-events", "none")
+        .style("opacity", 0).style("z-index", 1000);
+
+    function updateChart() {
+        g.selectAll("*").remove();
+
+        const fdata = DATA.filter(d => d.family === activeFamily);
+        const methods = ["rank1", "greedy", "hybrid", "sa"];
+
+        const x = d3.scaleLog().domain([d3.min(fdata, d=>d.n)*0.8, d3.max(fdata, d=>d.n)*1.2]).range([0, w]);
+
+        // Compute score ratios relative to greedy
+        const allRatios = [];
+        methods.forEach(m => fdata.forEach(d => allRatios.push(d[m] / d.greedy)));
+        const yMin = Math.min(...allRatios) * 0.98;
+        const yMax = Math.max(...allRatios) * 1.02;
+        const y = d3.scaleLinear().domain([yMin, yMax]).range([h, 0]);
+
+        g.append("g").attr("transform", `translate(0,${h})`).call(d3.axisBottom(x).ticks(5).tickFormat(d => d >= 1000000 ? d/1000000+"M" : d >= 1000 ? d/1000+"K" : d));
+        g.append("g").call(d3.axisLeft(y).ticks(6).tickFormat(d3.format(".3f")));
+
+        // Reference line at 1.0
+        g.append("line").attr("x1", 0).attr("x2", w).attr("y1", y(1)).attr("y2", y(1))
+            .attr("stroke", "#ccc").attr("stroke-dasharray", "4,4");
+        g.append("text").attr("x", w+5).attr("y", y(1)+4).text("= Greedy")
+            .style("font-size", "11px").style("fill", "#999").style("font-family", "Source Sans Pro");
+
+        g.append("text").attr("x", w/2).attr("y", h+45).attr("text-anchor", "middle")
+            .style("font-family", "Source Sans Pro, sans-serif").style("font-size", "14px").text("Graph size (n)");
+        g.append("text").attr("transform", "rotate(-90)").attr("y", -55).attr("x", -h/2).attr("text-anchor", "middle")
+            .style("font-family", "Source Sans Pro, sans-serif").style("font-size", "14px").text("Score / Greedy score");
+
+        methods.forEach(m => {
+            const lineData = fdata.map(d => ({n: d.n, ratio: d[m] / d.greedy, score: d[m]}));
+            const line = d3.line().x(d => x(d.n)).y(d => y(d.ratio));
+
+            g.append("path").datum(lineData)
+                .attr("fill", "none")
+                .attr("stroke", COLORS[m])
+                .attr("stroke-width", 2.5)
+                .attr("d", line);
+
+            g.selectAll(`.dot-${m}`).data(lineData).enter().append("circle")
+                .attr("cx", d => x(d.n)).attr("cy", d => y(d.ratio))
+                .attr("r", 5).attr("fill", COLORS[m]).attr("stroke", "#fff").attr("stroke-width", 1.5)
+                .on("mouseover", (event, d) => {
+                    tooltip.style("opacity", 1)
+                        .html(`<strong>${METHOD_NAMES[m]}</strong><br>n = ${d.n.toLocaleString()}<br>Score: ${d.score.toLocaleString()}<br>Ratio: ${d.ratio.toFixed(4)}`);
+                })
+                .on("mousemove", (event) => {
+                    tooltip.style("left", (event.pageX+12)+"px").style("top", (event.pageY-40)+"px");
+                })
+                .on("mouseout", () => tooltip.style("opacity", 0));
+        });
+
+        // Legend
+        const legend = g.append("g").attr("transform", `translate(10, 10)`);
+        methods.forEach((m, i) => {
+            const lg = legend.append("g").attr("transform", `translate(${i * 100}, 0)`);
+            lg.append("rect").attr("width", 12).attr("height", 12).attr("rx", 2).attr("fill", COLORS[m]);
+            lg.append("text").attr("x", 16).attr("y", 10).text(METHOD_NAMES[m])
+                .style("font-family", "Source Sans Pro, sans-serif").style("font-size", "12px");
+        });
+    }
+
+    updateChart();
+})();
+
+// ===== TIME vs QUALITY TRADEOFF CHART =====
+(function() {
+    const box = d3.select("#tradeoff-chart");
+    const W = 860, H = 420;
+    const margin = {top: 30, right: 30, bottom: 60, left: 80};
+    const w = W - margin.left - margin.right;
+    const h = H - margin.top - margin.bottom;
+
+    const svg = box.append("svg")
+        .attr("viewBox", `0 0 ${W} ${H}`)
+        .attr("width", "100%");
+
+    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const tooltip = d3.select("body").append("div")
+        .style("position", "absolute").style("background", "#fff").style("border", "1px solid #ccc")
+        .style("border-radius", "4px").style("padding", "8px 12px").style("font-size", "13px")
+        .style("font-family", "Source Sans Pro, sans-serif").style("pointer-events", "none")
+        .style("opacity", 0).style("z-index", 1000);
+
+    // Build scatter data
+    const scatterData = [];
+    DATA.forEach(d => {
+        const best = Math.max(d.rank1, d.greedy, d.hybrid, d.sa);
+        const methods = [
+            {method: "rank1", time: d.r1_time, score: d.rank1, ratio: d.rank1/best},
+            {method: "greedy", time: d.g_time, score: d.greedy, ratio: d.greedy/best},
+            {method: "hybrid", time: d.h_time, score: d.hybrid, ratio: d.hybrid/best},
+            {method: "sa", time: d.sa_time, score: d.sa, ratio: d.sa/best},
+        ];
+        methods.forEach(m => scatterData.push({...m, family: d.family, n: d.n}));
+    });
+
+    const x = d3.scaleLog().domain([0.005, 5000]).range([0, w]);
+    const y = d3.scaleLinear().domain([0.6, 1.02]).range([h, 0]);
+
+    g.append("g").attr("transform", `translate(0,${h})`).call(d3.axisBottom(x).ticks(6).tickFormat(d => d >= 1 ? d+"s" : (d*1000)+"ms"));
+    g.append("g").call(d3.axisLeft(y).ticks(6).tickFormat(d3.format(".0%")));
+
+    g.append("text").attr("x", w/2).attr("y", h+45).attr("text-anchor", "middle")
+        .style("font-family", "Source Sans Pro, sans-serif").style("font-size", "14px").text("Wall-clock time (log scale)");
+    g.append("text").attr("transform", "rotate(-90)").attr("y", -55).attr("x", -h/2).attr("text-anchor", "middle")
+        .style("font-family", "Source Sans Pro, sans-serif").style("font-size", "14px").text("Score / best known");
+
+    g.selectAll("circle").data(scatterData).enter().append("circle")
+        .attr("cx", d => x(Math.max(d.time, 0.005)))
+        .attr("cy", d => y(d.ratio))
+        .attr("r", d => d.n >= 500000 ? 7 : d.n >= 100000 ? 5.5 : 4)
+        .attr("fill", d => COLORS[d.method])
+        .attr("opacity", 0.7)
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 0.8)
+        .on("mouseover", (event, d) => {
+            tooltip.style("opacity", 1)
+                .html(`<strong>${METHOD_NAMES[d.method]}</strong> on ${d.family} (n=${d.n.toLocaleString()})<br>Score: ${d.score.toLocaleString()}<br>Time: ${d.time.toFixed(1)}s<br>Quality: ${(d.ratio*100).toFixed(1)}%`);
+        })
+        .on("mousemove", (event) => {
+            tooltip.style("left", (event.pageX+12)+"px").style("top", (event.pageY-40)+"px");
+        })
+        .on("mouseout", () => tooltip.style("opacity", 0));
+
+    // Legend
+    const methods = ["rank1", "greedy", "hybrid", "sa"];
+    const legend = g.append("g").attr("transform", `translate(10, 10)`);
+    methods.forEach((m, i) => {
+        const lg = legend.append("g").attr("transform", `translate(${i * 100}, 0)`);
+        lg.append("circle").attr("cx", 6).attr("cy", 6).attr("r", 5).attr("fill", COLORS[m]);
+        lg.append("text").attr("x", 16).attr("y", 10).text(METHOD_NAMES[m])
+            .style("font-family", "Source Sans Pro, sans-serif").style("font-size", "12px");
+    });
+})();
+
+</script>
+
+</body>
+</html>
