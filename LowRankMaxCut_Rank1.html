@@ -250,6 +250,8 @@ table.results-tbl td.second { background: #dce8ff; }
     line-height: 1.5;
     font-family: 'Fira Mono', monospace;
     font-size: 0.82em;
+    white-space: pre;
+    word-wrap: break-word;
 }
 .code-diff .removed { background: #fdd; color: #900; }
 .code-diff .added { background: #dfd; color: #060; }
@@ -403,6 +405,26 @@ The distinction matters because the hybrid solver is not simply &ldquo;rank-1 bu
     </div>
 </div>
 
+<details>
+<summary style="cursor:pointer; color:#648FFF; font-family:'Source Sans Pro',sans-serif; font-weight:600; margin: 1em 0;">Show the ~10 lines</summary>
+<pre><code># The complete incremental rank-1 sweep
+for phase_idx in range(K * n):
+    # Try flipping vertex i to partition j
+    i = order[phase_idx]
+    for j in range(K):
+        if j == k[i]: continue
+        delta_z = roots[j] - roots[k[i]]
+        delta = 2 * np.real(np.conj(delta_z) * Qz[i]) + np.abs(delta_z)**2 * Q_diag[i]
+        if delta > best_delta:
+            best_delta, best_i, best_j = delta, i, j
+    if best_delta > 0:
+        # Commit flip and update Qz incrementally
+        delta_z = roots[best_j] - roots[k[best_i]]
+        Qz += delta_z * Q_csc[:, best_i]  # O(degree) sparse update
+        k[best_i] = best_j
+</code></pre>
+</details>
+
 <hr class="section-divider">
 
 <!-- ============================================================ -->
@@ -415,13 +437,16 @@ Recall the setup. Given a graph Laplacian \(\mathbf{Q}\) and its top eigenvector
 </p>
 
 <p>
-The naive approach recomputes this score from scratch: multiply \(\mathbf{Q}\mathbf{z}\), then dot with \(\mathbf{z}\). Each evaluation costs \(O(\text{nnz})\) for a sparse matrix with nnz non-zeros. Over \(n\) sweeps, the total is \(O(n \cdot \text{nnz})\). For a 5-regular graph (where nnz \(= 5n\)), this gives \(O(n^2)\) &mdash; manageable at \(n = 1{,}000\), but 17 hours at \(n = 100{,}000\).
+The naive approach recomputes this score from scratch: multiply \(\mathbf{Q}\mathbf{z}\), then dot with \(\mathbf{z}\). Each evaluation costs \(O(\text{nnz})\) for a sparse matrix with nnz non-zeros. Over \(n\) sweeps, the total is \(O(n \cdot \text{nnz})\). For a 5-regular graph (where nnz \(= 5n\)), this gives \(O(n^2)\) &mdash; manageable at \(n = 1{,}000\), but 17 hours at \(n = 100{,}000\). With incremental scoring (described next), that same computation drops to under 2 seconds: a 30,000&times; speedup.
 </p>
 
 <div class="insight-box">
     <div class="insight-title">The key observation</div>
     <p>
-        When one node \(i\) flips from \(z_\text{old}\) to \(z_\text{new}\), the score change has a closed-form expression:
+        The key insight: \(\mathbf{z}^\dagger \mathbf{Q} \mathbf{z}\) is a sum over every pair of vertices \((i, j)\) weighted by \(Q_{ij}\). When we flip only vertex \(i\) from one partition to another, only the terms involving \(i\) can change. These interactions collapse into a single cached quantity, \((\mathbf{Q}\mathbf{z})_i\) &mdash; essentially "how vertex \(i\) sees the rest of the current partition." By maintaining this cache, each candidate flip costs one lookup instead of re-evaluating the entire sum.
+    </p>
+    <p>
+        Concretely, when node \(i\) flips from \(z_\text{old}\) to \(z_\text{new}\), the score change has a closed-form expression:
     </p>
     <div class="math-block">
     $$\Delta = 2 \cdot \text{Re}\big(\overline{\delta z} \cdot (\mathbf{Q}\mathbf{z})_i\big) + |\delta z|^2 \cdot Q_{ii}$$
@@ -478,8 +503,89 @@ The problem: graph Laplacians are real symmetric, so their eigenvectors are real
     $$q_i = v_1(i) + j \cdot v_2(i)$$
     </div>
     <p>
-        Now \(\text{arg}(q_i)\) spans the full \([0, 2\pi)\) circle, and all three partitions are reachable. The cost is one extra eigenvalue computation &mdash; negligible compared to the sweep.
+        Now \(\text{arg}(q_i)\) spans the full \([0, 2\pi)\) circle, and all three partitions are reachable. Requesting \(k=2\) eigenvectors instead of \(k=1\) adds negligible time to the eigensolve.
     </p>
+</div>
+
+<div class="interactive-box">
+    <div class="box-title">Why two eigenvectors unlock the third partition</div>
+    <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" style="width:100%; max-width:640px; display:block; margin:0 auto;">
+        <!-- LEFT CIRCLE: Real eigenvector only -->
+        <g transform="translate(155,140)">
+            <!-- Sector fills (120° wedges) -->
+            <!-- Sector 0: centered at 0°, from -60° to 60° -->
+            <path d="M0,0 L110,0 A110,110 0 0,0 55,-95.26 Z" fill="#648FFF" fill-opacity="0.1" stroke="#648FFF" stroke-width="0.5" stroke-opacity="0.3"/>
+            <!-- Sector 1: centered at 120°, from 60° to 180° -->
+            <path d="M0,0 L55,-95.26 A110,110 0 0,0 -110,0 Z" fill="#FFB000" fill-opacity="0.1" stroke="#FFB000" stroke-width="0.5" stroke-opacity="0.3"/>
+            <!-- Sector 2: centered at 240°, from 180° to 300° -->
+            <path d="M0,0 L-110,0 A110,110 0 0,0 55,95.26 Z" fill="#DC267F" fill-opacity="0.1" stroke="#DC267F" stroke-width="0.5" stroke-opacity="0.3"/>
+            <!-- Remaining wedge from 300° to 360° (part of sector 0) -->
+            <path d="M0,0 L55,95.26 A110,110 0 0,0 110,0 Z" fill="#648FFF" fill-opacity="0.1" stroke="#648FFF" stroke-width="0.5" stroke-opacity="0.3"/>
+
+            <!-- Unit circle -->
+            <circle cx="0" cy="0" r="110" fill="none" stroke="#999" stroke-width="1.5"/>
+            <!-- Axes -->
+            <line x1="-120" y1="0" x2="120" y2="0" stroke="#ddd" stroke-width="0.5"/>
+            <line x1="0" y1="-120" x2="0" y2="120" stroke="#ddd" stroke-width="0.5"/>
+
+            <!-- Dots clustered at 0 and π (real eigenvector phases) -->
+            <!-- At angle 0 (right side) -->
+            <circle cx="110" cy="0" r="4" fill="#648FFF"/><circle cx="105" cy="8" r="4" fill="#648FFF"/>
+            <circle cx="108" cy="-6" r="4" fill="#648FFF"/><circle cx="102" cy="-12" r="4" fill="#648FFF"/>
+            <circle cx="106" cy="14" r="4" fill="#648FFF"/><circle cx="100" cy="4" r="4" fill="#648FFF"/>
+            <circle cx="112" cy="-2" r="4" fill="#648FFF"/><circle cx="98" cy="-8" r="4" fill="#648FFF"/>
+            <circle cx="104" cy="10" r="4" fill="#648FFF"/><circle cx="107" cy="-10" r="4" fill="#648FFF"/>
+            <!-- At angle π (left side) -->
+            <circle cx="-110" cy="0" r="4" fill="#648FFF"/><circle cx="-105" cy="8" r="4" fill="#648FFF"/>
+            <circle cx="-108" cy="-6" r="4" fill="#648FFF"/><circle cx="-102" cy="-12" r="4" fill="#648FFF"/>
+            <circle cx="-106" cy="14" r="4" fill="#648FFF"/><circle cx="-100" cy="4" r="4" fill="#648FFF"/>
+            <circle cx="-112" cy="-2" r="4" fill="#648FFF"/><circle cx="-98" cy="-8" r="4" fill="#648FFF"/>
+            <circle cx="-104" cy="10" r="4" fill="#648FFF"/><circle cx="-107" cy="-10" r="4" fill="#648FFF"/>
+
+            <!-- Sector labels -->
+            <text x="70" y="-10" font-family="Source Sans Pro, sans-serif" font-size="11" fill="#648FFF" font-weight="600">0</text>
+            <text x="-30" y="-75" font-family="Source Sans Pro, sans-serif" font-size="11" fill="#FFB000" font-weight="600">1 (empty)</text>
+            <text x="-30" y="85" font-family="Source Sans Pro, sans-serif" font-size="11" fill="#DC267F" font-weight="600">2</text>
+        </g>
+        <text x="155" y="272" text-anchor="middle" font-family="Source Sans Pro, sans-serif" font-size="12" fill="#555">Single real eigenvector: partition 1 unreachable</text>
+
+        <!-- RIGHT CIRCLE: Complex combination -->
+        <g transform="translate(485,140)">
+            <!-- Sector fills -->
+            <path d="M0,0 L110,0 A110,110 0 0,0 55,-95.26 Z" fill="#648FFF" fill-opacity="0.1" stroke="#648FFF" stroke-width="0.5" stroke-opacity="0.3"/>
+            <path d="M0,0 L55,-95.26 A110,110 0 0,0 -110,0 Z" fill="#FFB000" fill-opacity="0.1" stroke="#FFB000" stroke-width="0.5" stroke-opacity="0.3"/>
+            <path d="M0,0 L-110,0 A110,110 0 0,0 55,95.26 Z" fill="#DC267F" fill-opacity="0.1" stroke="#DC267F" stroke-width="0.5" stroke-opacity="0.3"/>
+            <path d="M0,0 L55,95.26 A110,110 0 0,0 110,0 Z" fill="#648FFF" fill-opacity="0.1" stroke="#648FFF" stroke-width="0.5" stroke-opacity="0.3"/>
+
+            <!-- Unit circle -->
+            <circle cx="0" cy="0" r="110" fill="none" stroke="#999" stroke-width="1.5"/>
+            <line x1="-120" y1="0" x2="120" y2="0" stroke="#ddd" stroke-width="0.5"/>
+            <line x1="0" y1="-120" x2="0" y2="120" stroke="#ddd" stroke-width="0.5"/>
+
+            <!-- Dots spread around the full circle -->
+            <!-- Sector 0 -->
+            <circle cx="108" cy="-15" r="4" fill="#648FFF"/><circle cx="100" cy="30" r="4" fill="#648FFF"/>
+            <circle cx="95" cy="-50" r="4" fill="#648FFF"/><circle cx="105" cy="10" r="4" fill="#648FFF"/>
+            <circle cx="85" cy="65" r="4" fill="#648FFF"/><circle cx="110" cy="3" r="4" fill="#648FFF"/>
+            <!-- Sector 1 (was empty, now populated) -->
+            <circle cx="-20" cy="-108" r="4" fill="#648FFF"/><circle cx="-55" cy="-95" r="4" fill="#648FFF"/>
+            <circle cx="30" cy="-105" r="4" fill="#648FFF"/><circle cx="-80" cy="-75" r="4" fill="#648FFF"/>
+            <circle cx="-95" cy="-55" r="4" fill="#648FFF"/><circle cx="10" cy="-110" r="4" fill="#648FFF"/>
+            <circle cx="-40" cy="-102" r="4" fill="#648FFF"/>
+            <!-- Sector 2 -->
+            <circle cx="-108" cy="15" r="4" fill="#648FFF"/><circle cx="-100" cy="40" r="4" fill="#648FFF"/>
+            <circle cx="-70" cy="85" r="4" fill="#648FFF"/><circle cx="-50" cy="97" r="4" fill="#648FFF"/>
+            <circle cx="10" cy="110" r="4" fill="#648FFF"/><circle cx="-90" cy="62" r="4" fill="#648FFF"/>
+            <circle cx="40" cy="102" r="4" fill="#648FFF"/>
+
+            <!-- Sector labels -->
+            <text x="70" y="-10" font-family="Source Sans Pro, sans-serif" font-size="11" fill="#648FFF" font-weight="600">0</text>
+            <text x="-30" y="-75" font-family="Source Sans Pro, sans-serif" font-size="11" fill="#FFB000" font-weight="600">1</text>
+            <text x="-30" y="85" font-family="Source Sans Pro, sans-serif" font-size="11" fill="#DC267F" font-weight="600">2</text>
+        </g>
+        <text x="485" y="272" text-anchor="middle" font-family="Source Sans Pro, sans-serif" font-size="12" fill="#555">Complex rounding: all three partitions accessible</text>
+    </svg>
+    <div class="caption">Left: a real eigenvector can only produce phases 0 and &pi;, leaving one sector empty. Right: combining two eigenvectors as \(v_1 + j \cdot v_2\) spreads phases around the full circle.</div>
 </div>
 
 <p>

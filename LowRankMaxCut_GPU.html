@@ -386,6 +386,31 @@ noscript .static-fallback {
     color: #666;
     font-style: italic;
 }
+
+/* ===== TOOLTIPS ===== */
+.tooltip-term {
+    border-bottom: 1px dotted #648FFF;
+    cursor: help;
+    position: relative;
+}
+.tooltip-term:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-family: 'Source Sans Pro', sans-serif;
+    white-space: nowrap;
+    max-width: 300px;
+    white-space: normal;
+    z-index: 10;
+    line-height: 1.4;
+}
 </style>
 </head>
 <body>
@@ -462,7 +487,7 @@ Our question was simple: <em>can these obsolete machines, working together, solv
 </table>
 
 <p>
-The result: our Rank-2 algorithm running across all 15 GPUs <strong>matches or exceeds</strong> SDP solution quality on quadratic form maximization, as in MaxCUT instances, while running 1.5&ndash;3&times; faster. On torus graphs, it finds the provably optimal cut value every single time. And the total hardware cost? These machines were headed for e-waste.
+The result: our Rank-2 algorithm running across all 15 GPUs <strong>matches or exceeds</strong> SDP solution quality on quadratic form maximization, as in MaxCUT instances, while running 1.5&ndash;3&times; faster on most instances tested (torus at all sizes, regular graphs up to \(n = 1000\)). On torus graphs, it finds the provably optimal cut value every single time. And the total hardware cost? These machines were headed for e-waste.
 </p>
 
 <hr class="section-divider">
@@ -477,7 +502,11 @@ Given an undirected graph \(G = (V, E)\) with \(n\) vertices, the <strong>Max-3-
 </p>
 
 <p>
-This is equivalent to maximizing the Hamiltonian
+For Max-2-Cut, the two groups are encoded as \(+1\) and \(-1\) (the square roots of unity); for Max-3-Cut, we generalize to \(\{1, \omega, \omega^2\}\), the cube roots of unity. This complex-valued encoding turns the combinatorial problem into a maximization over phases.
+</p>
+
+<p>
+Formally, the problem is equivalent to maximizing the <span class="tooltip-term" data-tooltip="The objective function of the optimization problem, expressed as a quadratic form z†Qz">Hamiltonian</span>
 </p>
 <div class="math-block">
 \[
@@ -485,7 +514,7 @@ This is equivalent to maximizing the Hamiltonian
 \]
 </div>
 <p>
-where \(\omega = e^{2\pi i/3}\) is a primitive cube root of unity, and \(Q\) is derived from the graph Laplacian \(L\):
+where \(\omega = e^{2\pi i/3}\) is a primitive cube root of unity, and \(Q\) is derived from the graph <span class="tooltip-term" data-tooltip="A matrix L = D − A encoding graph connectivity, where D is the degree matrix and A the adjacency matrix">Laplacian</span> \(L\):
 </p>
 <div class="math-block">
 \[
@@ -498,7 +527,7 @@ Here \(A\) is the adjacency matrix and \(D\) is the degree matrix. Each vertex \
 
 <h3>Why is it hard?</h3>
 <p>
-Max-3-Cut is <strong>NP-hard</strong>. The best polynomial-time approximation ratio known is 0.836, achieved via semidefinite programming (SDP) relaxation followed by hyperplane rounding. The SDP approach lifts the problem into a space of \(n \times n\) positive semidefinite matrices, solves a convex relaxation, and then rounds the solution back to a discrete assignment. This gives excellent solution quality, but the cost is steep: interior-point SDP solvers run in \(\mathcal{O}(n^{3.5})\) time and require \(\mathcal{O}(n^2)\) memory, and they are inherently sequential.
+Max-3-Cut is <strong>NP-hard</strong>. The best polynomial-time approximation ratio known is 0.836, due to Frieze and Jerrum's complex-valued SDP generalization. (For comparison, the celebrated Goemans&ndash;Williamson result achieves 0.878 for \(K = 2\), i.e., Max-Cut.) This ratio is achieved via semidefinite programming (SDP) relaxation followed by <span class="tooltip-term" data-tooltip="Converting continuous relaxation solutions to discrete assignments by partitioning space with random hyperplanes">hyperplane rounding</span>. The SDP approach lifts the problem into a space of \(n \times n\) positive semidefinite matrices, solves a convex relaxation, and then rounds the solution back to a discrete assignment. This gives excellent solution quality, but the cost is steep: interior-point SDP solvers run in \(\mathcal{O}(n^{3.5})\) time and require \(\mathcal{O}(n^2)\) memory, and they are inherently sequential.
 </p>
 
 <h3>Why does it matter?</h3>
@@ -513,6 +542,12 @@ Max-\(K\)-Cut problems arise throughout engineering and science. In <strong>VLSI
 <!-- ============================================================ -->
 <h2>3. The Low-Rank Idea</h2>
 
+<h3>Why low-rank works: spectral concentration in real graphs</h3>
+<p>
+The key empirical observation is that real-world and structured graphs have spectra where a handful of top eigenvalues carry most of the cut-relevant information. Torus lattices, regular graphs, and many network models exhibit rapid eigenvalue decay: the largest two or three eigenvalues of the objective matrix \(Q\) dominate the sum, while the remaining eigenvalues contribute relatively little to the optimal cut value. This spectral concentration means that solving the optimization over a low-rank approximation of \(Q\) can yield solutions close to the true optimum &mdash; at dramatically lower computational cost.
+</p>
+
+<h3>Exploiting the structure: eigendecomposition</h3>
 <p>
 Let \(Q = \sum_{j=1}^n \lambda_j v_j v_j^\dagger\) be the eigendecomposition of the objective matrix, with eigenvalues sorted in decreasing order. If the top \(r\) eigenvalues capture most of the spectral energy &mdash; that is, \(\sum_{j=1}^r \lambda_j \approx \sum_{j=1}^n \lambda_j\) &mdash; then we can approximate \(Q \approx Q_r = \sum_{j=1}^r \lambda_j v_j v_j^\dagger\) and solve the optimization over the low-rank approximation instead.
 </p>
@@ -529,7 +564,7 @@ The algorithm sweeps \(\varphi\) over a discrete set of \(n+1\) candidate values
 
 <h3>Rank-2: Hypersurface arrangements</h3>
 <p>
-When \(r = 2\), the objective is \(z^\dagger Q_2 z = \lambda_1 |v_1^\dagger z|^2 + \lambda_2 |v_2^\dagger z|^2\). Now each vertex \(i\) is described by a <em>pair</em> of angles \((\theta_{1,i}, \theta_{2,i})\) from the two eigenvectors. The decision boundaries become curves in a two-dimensional parameter space rather than points on a circle.
+When \(r = 2\), the objective is \(z^\dagger Q_2 z = \lambda_1 |v_1^\dagger z|^2 + \lambda_2 |v_2^\dagger z|^2\). Now each vertex \(i\) is described by a <em>pair</em> of angles \((\theta_{1,i}, \theta_{2,i})\) from the two eigenvectors. The decision boundaries become curves in a two-dimensional parameter space rather than points on a circle. In rank-1, the rounding depends on a single phase angle \(\varphi\). In rank-2, the rounding depends on a direction \((\alpha, \beta)\) on a 3-dimensional sphere in \(\mathbb{C}^2\), giving exponentially more candidate partitions to search.
 </p>
 
 <p>
@@ -539,6 +574,10 @@ The structure is <strong>embarrassingly parallel</strong>: each candidate can be
 <h3>When does low-rank work?</h3>
 <p>
 The quality of the low-rank approximation depends on the <strong>spectral energy ratio</strong> \(\rho_r = 1 - \sum_{j=1}^r \lambda_j / \sum_{j=1}^n \lambda_j\), which measures the fraction of spectral energy <em>not</em> captured by the top \(r\) eigenvalues. Our theory guarantees a multiplicative approximation factor of \((1 - \epsilon)\) where \(\epsilon\) depends on \(\rho_r\) and the perturbation structure.
+</p>
+
+<p>
+<strong>A subtlety about energy fractions:</strong> the thermometer below shows that <em>all</em> sparse graph families capture ~98% of spectral energy at rank-2. This is because the <span class="tooltip-term" data-tooltip="A matrix L = D &minus; A encoding graph connectivity, where D is the degree matrix and A the adjacency matrix">Laplacian</span> trace (which equals \(\sum_j \lambda_j\)) grows as \(n \times \text{degree}\), while the top eigenvalues are bounded. The distinction between graph families shows up in the eigenvalue <em>decay rate</em> &mdash; how quickly the eigenvalues drop off after the top few &mdash; not in the absolute energy fraction at rank-2. Torus graphs have sharp spectral gaps (the top eigenvalues are well-separated from the rest), while SBM graphs have gradual decay, which is why low-rank methods excel on the former and struggle on the latter.
 </p>
 
 
@@ -678,7 +717,7 @@ All Rank-2 runs used throughput-proportional splitting across 15 GPUs.
 
 <h3>Timing comparison</h3>
 <p>
-At small sizes (\(n \leq 500\)), SDP is faster than Rank-2 because the \(O(n^5/P)\) cost dominates even with 15 GPUs. But the crossover happens around \(n = 750\text{--}1000\) for regular graphs. At \(n = 1500\), Rank-2 takes about 7,100 seconds while SDP takes about 4,400 seconds on regular graphs &mdash; SDP is still faster here. However, Rank-2 scales linearly with additional GPUs: adding just 5 more P100s would bring it below SDP's time, and the algorithm can distribute across any number of machines with no communication overhead.
+At small and medium sizes (\(n \leq 1000\)), Rank-2 is faster than SDP on regular graphs: at \(n = 250\) it is 1.3&ndash;2&times; faster, at \(n = 500\) roughly 3&times; faster, and at \(n = 1000\) about 1.7&times; faster. However, the \(\mathcal{O}(n^3)\) candidate enumeration cost catches up at larger sizes. At \(n = 1500\) on regular graphs, Rank-2 takes about 7,100 seconds while SDP takes about 4,400 seconds &mdash; the crossover happens between \(n = 1000\) and \(n = 1500\). On torus graphs, Rank-2 remains competitive or faster at all sizes tested. Importantly, Rank-2 scales linearly with additional GPUs: adding just 5 more P100s would bring the \(n = 1500\) regular time below SDP's, and the algorithm can distribute across any number of machines with no communication overhead.
 </p>
 
 <h3>Scaling to modern hardware</h3>
@@ -749,7 +788,7 @@ Every method has its strengths and weaknesses. Rather than overselling our appro
 </p>
 
 <p>
-<strong>Use SDP when:</strong> you need the best known approximation ratio regardless of runtime, your graph is small (\(n \leq 500\)), or the graph has flat spectral structure (e.g., SBM, Erdos-Renyi) where low-rank methods lose information.
+<strong>Use SDP when:</strong> you need the best known approximation ratio regardless of runtime, your graph has flat spectral structure (e.g., SBM, Erdos-Renyi) where low-rank methods lose information, or \(n\) is large enough (\(n \geq 1500\) on regular graphs) that the \(\mathcal{O}(n^3)\) candidate enumeration outweighs the parallelism advantage.
 </p>
 
 <p>
