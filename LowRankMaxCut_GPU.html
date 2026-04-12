@@ -777,14 +777,14 @@ Every method has its strengths and weaknesses. Rather than overselling our appro
     <div id="radar-chart" style="text-align:center;"></div>
     <div class="radar-legend" id="radar-legend"></div>
     <div class="caption">
-        Hover over a method name to highlight its polygon and dim others. Five axes: Quality (avg. cut ratio vs. best known), Speed (1/runtime), Parallelizability (speedup with more GPUs), Scalability (largest tractable n), Theory (approximation guarantee strength).
+        Hover over a method name to highlight its polygon and dim others. Five axes: Quality (avg. cut ratio vs. best known), Speed (1/runtime), Parallelizability (speedup with more GPUs), Scalability (largest tractable n), Theory (approximation guarantee strength). Note: SDP provides an unconditional 0.836-approximation for any input matrix. Rank-2's guarantee is conditional&mdash;it bounds the approximation relative to the low-rank optimum, not the full-rank optimum, and depends on the spectral energy ratio.
     </div>
     <noscript><div class="static-fallback">Radar chart requires JavaScript.</div></noscript>
 </div>
 
 <h3>When to use low-rank methods</h3>
 <p>
-<strong>Use Rank-2 when:</strong> your graph has concentrated spectral energy (torus lattices, regular graphs, structured networks), you have access to multiple GPUs (even old ones), you need provable guarantees, and your graph is large enough (\(n \geq 500\)) that SDP's sequential nature becomes a bottleneck.
+<strong>Use Rank-2 when:</strong> your graph has concentrated spectral energy (torus lattices, regular graphs, structured networks), you have access to multiple GPUs (even old ones), and your graph is large enough (\(n \geq 500\)) that SDP's sequential nature becomes a bottleneck. Note: Rank-2's approximation guarantee is relative to the low-rank optimum; for unconditional guarantees, SDP is stronger.
 </p>
 
 <p>
@@ -941,7 +941,7 @@ const MACHINES = [
 
 // ---- Radar chart data ----
 const RADAR_METHODS = [
-    {name: "Rank-2 (15 GPU)", color: "#648FFF", values: [0.82, 0.55, 0.95, 0.80, 0.90]},
+    {name: "Rank-2 (15 GPU)", color: "#648FFF", values: [0.82, 0.55, 0.95, 0.80, 0.40]},
     {name: "SDP", color: "#785EF0", values: [0.92, 0.40, 0.15, 0.50, 0.95]},
     {name: "Greedy", color: "#DC267F", values: [0.78, 0.85, 0.30, 0.90, 0.10]},
     {name: "Random", color: "#FFB000", values: [0.55, 0.98, 0.50, 0.95, 0.05]}

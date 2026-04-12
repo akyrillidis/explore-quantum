@@ -195,9 +195,9 @@ Partitioning a network into groups to maximize cross-group connections arises ev
 SDP solvers are expensive (at least \(\mathcal{O}(n^{3.5})\)) and more importantly hard to parallelize, while heuristic methods like genetic algorithms lack provable guarantees.
 </p>
 <p>
-Our key insight is simple: many real-world graphs have Laplacians whose spectra decay rapidly, meaning most of the "cut information" lives in a few top eigenvalues.
+Our key insight is simple: for Max-K-Cut, the objective \(z^\dagger L z\) is dominated by the top eigenvalues of the Laplacian. On graphs with concentrated spectra&mdash;torus lattices, regular graphs, and networks with clear community structure&mdash;the top 2&ndash;3 eigenvalues capture enough structure to find near-optimal partitions. (Note: this is distinct from spectral clustering, which uses the <em>bottom</em> eigenvalues to minimize cuts. We maximize cuts, so the top eigenvalues are the relevant ones.)
 By projecting the problem onto a low-rank approximation of the Laplacian, we convert Max-3-Cut into an <em>exact</em> discrete quadratic maximization that can be solved in polynomial time for fixed rank.
-This yields a family of algorithms&mdash;Rank-1, Rank-2, Rank-3&mdash;that trade off between speed and solution quality, are embarrassingly parallel, and come with provable approximation guarantees for the full-rank case.
+This yields a family of algorithms&mdash;Rank-1, Rank-2, Rank-3&mdash;that trade off between speed and solution quality, are embarrassingly parallel, and come with provable approximation guarantees relative to the low-rank optimum.
 </p>
 
 <br><hr>
