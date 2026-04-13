@@ -928,7 +928,7 @@ const DATA = [
 const EIGENVALUE_DATA = {
     "Nearly flat": [10.0, 9.6, 9.2, 8.8, 8.4, 8.0, 7.6, 7.2, 6.8, 6.5],
     "Power-law decay": [10.0, 5.0, 3.33, 2.5, 2.0, 1.67, 1.43, 1.25, 1.11, 1.0],
-    "Low-rank (rank 3)": [10.0, 8.0, 6.0, 0.4, 0.25, 0.15, 0.1, 0.07, 0.04, 0.02]
+    "Low-rank (rank 3)": [10.0, 8.0, 6.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 };
 
 // ---- Cluster machine specs ----
@@ -1263,19 +1263,19 @@ const RADAR_AXES = ["Quality", "Speed", "Parallelizability", "Scalability", "The
     const valSpan = document.getElementById("rank-val");
     const readout = document.getElementById("energy-readout");
 
-    const familyNames = {torus: "Torus", regular: "3-Regular", sbm: "SBM"};
-    const familyColors = {torus: "#009E73", regular: "#648FFF", sbm: "#DC267F"};
+    const profiles = Object.keys(EIGENVALUE_DATA);
+    const profileColors = {"Nearly flat": "#DC267F", "Power-law decay": "#648FFF", "Low-rank (rank 3)": "#009E73"};
 
     function render(r) {
         container.innerHTML = "";
         const readouts = [];
 
-        ["torus", "regular", "sbm"].forEach(fam => {
+        profiles.forEach(fam => {
             const eigs = EIGENVALUE_DATA[fam];
             const total = eigs.reduce((s, v) => s + v, 0);
             const captured = eigs.slice(0, r).reduce((s, v) => s + v, 0);
             const pct = (captured / total * 100).toFixed(1);
-            readouts.push(`${familyNames[fam]}: ${pct}%`);
+            readouts.push(`${fam}: ${pct}%`);
 
             const chartDiv = document.createElement("div");
             chartDiv.style.textAlign = "center";
@@ -1295,8 +1295,8 @@ const RADAR_AXES = ["Quality", "Speed", "Parallelizability", "Scalability", "The
                 .attr("text-anchor", "middle")
                 .attr("font-family", "Source Sans Pro, sans-serif")
                 .attr("font-size", "13px").attr("font-weight", 600)
-                .attr("fill", familyColors[fam])
-                .text(familyNames[fam]);
+                .attr("fill", profileColors[fam])
+                .text(fam);
 
             eigs.forEach((v, i) => {
                 const barHeight = (v / maxEig) * (barH - 30);
@@ -1307,7 +1307,7 @@ const RADAR_AXES = ["Quality", "Speed", "Parallelizability", "Scalability", "The
                     .attr("width", bw)
                     .attr("height", barHeight)
                     .attr("rx", 2)
-                    .attr("fill", isIncluded ? familyColors[fam] : "#ccc")
+                    .attr("fill", isIncluded ? profileColors[fam] : "#ccc")
                     .attr("opacity", isIncluded ? 0.85 : 0.4);
 
                 svg.append("text")
@@ -1331,7 +1331,7 @@ const RADAR_AXES = ["Quality", "Speed", "Parallelizability", "Scalability", "The
         });
 
         readout.innerHTML = readouts.map((r, i) => {
-            const colors = ["#009E73", "#648FFF", "#DC267F"];
+            const colors = Object.values(profileColors);
             return `<span style="color:${colors[i]}">${r}</span>`;
         }).join(" &nbsp;|&nbsp; ");
     }
