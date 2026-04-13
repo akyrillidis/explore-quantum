@@ -577,7 +577,7 @@ The quality of the low-rank approximation depends on the <strong>spectral energy
 </p>
 
 <p>
-<strong>A subtlety about energy fractions:</strong> the thermometer below shows that <em>all</em> sparse graph families capture ~98% of spectral energy at rank-2. This is because the <span class="tooltip-term" data-tooltip="A matrix L = D &minus; A encoding graph connectivity, where D is the degree matrix and A the adjacency matrix">Laplacian</span> trace (which equals \(\sum_j \lambda_j\)) grows as \(n \times \text{degree}\), while the top eigenvalues are bounded. The distinction between graph families shows up in the eigenvalue <em>decay rate</em> &mdash; how quickly the eigenvalues drop off after the top few &mdash; not in the absolute energy fraction at rank-2. Torus graphs have sharp spectral gaps (the top eigenvalues are well-separated from the rest), while SBM graphs have gradual decay, which is why low-rank methods excel on the former and struggle on the latter.
+<strong>When does low-rank capture enough?</strong> It depends entirely on how fast the eigenvalues decay. The thermometer below illustrates three representative spectral profiles. A <em>nearly flat</em> spectrum (like dense random graphs) spreads energy across many eigenvalues &mdash; low-rank captures little. A <em>power-law</em> decay concentrates more energy in the top few. An <em>exactly low-rank</em> spectrum (three dominant eigenvalues, rest negligible) is the ideal case: rank-3 captures essentially everything. Real graphs fall somewhere on this continuum. Torus and regular graphs are closer to the low-rank end; Erd&odblac;s&ndash;R&eacute;nyi and SBM are closer to the flat end.
 </p>
 
 
@@ -591,7 +591,7 @@ The quality of the low-rank approximation depends on the <strong>spectral energy
     </div>
     <div id="energy-readout" style="text-align:center; font-family:'Fira Mono',monospace; font-size:0.9em; margin-top:6px;"></div>
     <div class="caption">
-        Bar charts show the top-10 eigenvalues of representative graphs from each family. Blue bars are included at the current rank \(r\); gray bars are excluded. The energy percentage shows how much of the total spectral energy is captured.
+        Three illustrative spectral profiles. Blue bars are included at the current rank \(r\); gray bars are excluded. The energy percentage shows how much of the total spectral energy is captured. Move the rank slider to see how quickly each profile saturates.
     </div>
     <noscript><div class="static-fallback">Spectral thermometer requires JavaScript.</div></noscript>
 </div>
@@ -923,12 +923,12 @@ const DATA = [
   {family:"torus",n:1500,seed:2,rank2_score:8999.0,rank2_time:6812.6,random_score:6288,random_time:28.777,greedy_score:8758,greedy_time:292.8,sdp_score:8963,sdp_time:3853.1,energy_ratio:0.0027,eigengap:0.0016}
 ];
 
-// ---- Example eigenvalue data for spectral thermometer ----
-// Actual top-10 eigenvalues from n=500 instances (seed=0), computed from Q matrices
+// ---- Illustrative eigenvalue profiles for spectral thermometer ----
+// Three representative decay patterns (not from specific graphs)
 const EIGENVALUE_DATA = {
-    torus: [7.998, 7.949, 7.945, 7.880, 7.875, 7.831, 7.827, 7.825, 7.823, 7.800],
-    regular: [8.953, 8.872, 8.862, 8.851, 8.815, 8.803, 8.797, 8.785, 8.741, 8.731],
-    sbm: [74.464, 73.761, 72.613, 72.316, 72.218, 71.903, 71.585, 71.359, 71.201, 71.108]
+    "Nearly flat": [10.0, 9.6, 9.2, 8.8, 8.4, 8.0, 7.6, 7.2, 6.8, 6.5],
+    "Power-law decay": [10.0, 5.0, 3.33, 2.5, 2.0, 1.67, 1.43, 1.25, 1.11, 1.0],
+    "Low-rank (rank 3)": [10.0, 8.0, 6.0, 0.4, 0.25, 0.15, 0.1, 0.07, 0.04, 0.02]
 };
 
 // ---- Cluster machine specs ----
