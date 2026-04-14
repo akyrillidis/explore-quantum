@@ -434,7 +434,7 @@ The natural question: can we get rank-2 quality without rank-2 cost? The answer 
 </div>
 
 <p>
-This is surprising. Each <span class="tooltip-term" data-tooltip="A triple is a set of 3 row indices from the transformed eigenvector matrix. The algorithm computes a null vector from these 3 rows, which determines a candidate partition of all vertices.">triple</span> of row indices defines a candidate partition; a &ldquo;good&rdquo; triple is one whose resulting partition scores close to optimal. A priori, one might expect good triples to become a vanishing fraction of the \(O(n^3)\) total as \(n\) grows. Instead, the spectral structure concentrates the mass: most random triples produce partitions that are close to optimal. The randomized algorithm inherits rank-2&rsquo;s ability to explore the full spectral subspace at a cost that is independent of \(n\). (Tested at \(n = 250\) to \(1{,}500\) against exact rank-2; indirect evidence to \(n = 1{,}400{,}000\) via fixed-budget runs.)
+This is surprising. Each triple of row indices defines a candidate partition; a &ldquo;good&rdquo; triple is one whose resulting partition scores close to optimal. A priori, one might expect good triples to become a vanishing fraction of the \(O(n^3)\) total as \(n\) grows. Instead, the spectral structure concentrates the mass: most random triples produce partitions that are close to optimal. The randomized algorithm inherits rank-2&rsquo;s ability to explore the full spectral subspace at a cost that is independent of \(n\). (Tested at \(n = 250\) to \(1{,}500\) against exact rank-2; indirect evidence to \(n = 1{,}400{,}000\) via fixed-budget runs.)
 </p>
 
 <p>
@@ -456,61 +456,11 @@ Since sampling is cheap, the practical question becomes: <em>on which graphs doe
 <h2>2. Where Does Rank-2 Help?</h2>
 
 <p>
-Rank-1 uses a single eigenvector to partition the graph: it projects nodes onto a 1D subspace and sweeps a single hyperplane. Geometrically, this covers a <span class="tooltip-term" data-tooltip="The largest possible circle on a sphere — like the equator on a globe. Rank-1 rounding can only explore partitions along this single loop.">great circle</span> on the unit sphere in the spectral embedding. When the graph&rsquo;s structure is well-captured by one spectral direction &mdash; as in torus or regular graphs &mdash; this great circle already passes through the optimal partition.
+Rank-1 uses a single eigenvector to partition the graph: it projects nodes onto a 1D subspace and sweeps a single hyperplane. Geometrically, this covers a great circle on the unit sphere in the spectral embedding. When the graph&rsquo;s structure is well-captured by one spectral direction &mdash; as in torus or regular graphs &mdash; this great circle already passes through the optimal partition.
 </p>
 
 <p>
-But on other graphs, the optimal partition lies off the great circle, in the full 2D spectral subspace. Rank-2 recovers this by <span class="tooltip-term" data-tooltip="Each triple of row indices from the transformed eigenvector matrix defines a unique direction on the spectral sphere, and thus a unique candidate partition.">sampling triples</span> of hyperplane indices that sweep the entire sphere, not just a single loop.
-</p>
-
-<!-- Globe visualization: great circle vs full sphere -->
-<div class="interactive-box">
-    <div class="box-title">Rank-1 vs. Rank-2: coverage of the spectral sphere</div>
-    <div style="display:flex; gap:24px; justify-content:center; flex-wrap:wrap; margin:12px 0;">
-        <div style="text-align:center;">
-            <svg width="200" height="200" viewBox="-110 -110 220 220">
-                <!-- Sphere outline -->
-                <ellipse cx="0" cy="0" rx="100" ry="100" fill="none" stroke="#ccc" stroke-width="1.5"/>
-                <!-- Equator (great circle) -->
-                <ellipse cx="0" cy="0" rx="100" ry="30" fill="none" stroke="#648FFF" stroke-width="3"/>
-                <!-- Dots along equator only -->
-                <circle cx="100" cy="0" r="4" fill="#648FFF"/> <circle cx="87" cy="15" r="4" fill="#648FFF"/>
-                <circle cx="71" cy="21" r="4" fill="#648FFF"/> <circle cx="50" cy="26" r="4" fill="#648FFF"/>
-                <circle cx="0" cy="30" r="4" fill="#648FFF"/> <circle cx="-50" cy="26" r="4" fill="#648FFF"/>
-                <circle cx="-87" cy="15" r="4" fill="#648FFF"/> <circle cx="-100" cy="0" r="4" fill="#648FFF"/>
-                <circle cx="-87" cy="-15" r="4" fill="#648FFF"/> <circle cx="-50" cy="-26" r="4" fill="#648FFF"/>
-                <circle cx="0" cy="-30" r="4" fill="#648FFF"/> <circle cx="50" cy="-26" r="4" fill="#648FFF"/>
-                <circle cx="87" cy="-15" r="4" fill="#648FFF"/>
-            </svg>
-            <div style="font-family:'Source Sans Pro',sans-serif; font-size:0.85em; color:#555; margin-top:4px;">
-                <strong>Rank-1:</strong> partitions lie on one great circle.
-            </div>
-        </div>
-        <div style="text-align:center;">
-            <svg width="200" height="200" viewBox="-110 -110 220 220">
-                <!-- Sphere outline -->
-                <ellipse cx="0" cy="0" rx="100" ry="100" fill="none" stroke="#ccc" stroke-width="1.5"/>
-                <!-- Equator (faint) -->
-                <ellipse cx="0" cy="0" rx="100" ry="30" fill="none" stroke="#648FFF" stroke-width="1" stroke-dasharray="4,4" opacity="0.3"/>
-                <!-- Dots scattered across the whole sphere -->
-                <circle cx="30" cy="-80" r="4" fill="#648FFF"/> <circle cx="-55" cy="-65" r="4" fill="#785EF0"/>
-                <circle cx="80" cy="-30" r="4" fill="#648FFF"/> <circle cx="-20" cy="-90" r="4" fill="#DC267F"/>
-                <circle cx="65" cy="55" r="4" fill="#785EF0"/> <circle cx="-75" cy="40" r="4" fill="#648FFF"/>
-                <circle cx="10" cy="85" r="4" fill="#DC267F"/> <circle cx="-40" cy="75" r="4" fill="#648FFF"/>
-                <circle cx="90" cy="20" r="4" fill="#785EF0"/> <circle cx="-90" cy="-15" r="4" fill="#DC267F"/>
-                <circle cx="45" cy="-55" r="4" fill="#648FFF"/> <circle cx="-65" cy="-40" r="4" fill="#785EF0"/>
-                <circle cx="15" cy="40" r="4" fill="#648FFF"/> <circle cx="-30" cy="10" r="4" fill="#DC267F"/>
-                <circle cx="70" cy="-60" r="4" fill="#785EF0"/> <circle cx="-85" cy="-55" r="4" fill="#648FFF"/>
-                <circle cx="50" cy="80" r="4" fill="#DC267F"/> <circle cx="-10" cy="-50" r="4" fill="#648FFF"/>
-                <circle cx="25" cy="65" r="4" fill="#785EF0"/> <circle cx="-50" cy="-20" r="4" fill="#648FFF"/>
-            </svg>
-            <div style="font-family:'Source Sans Pro',sans-serif; font-size:0.85em; color:#555; margin-top:4px;">
-                <strong>Rank-2:</strong> partitions cover the entire sphere.
-            </div>
-        </div>
-    </div>
-    <div class="caption">The actual problem lives one dimension higher (\(S^3\) instead of \(S^2\)), but the geometry is the same: rank-1 sees a slice, rank-2 sees the whole space.</div>
-</div>
+But on other graphs, the optimal partition lies off the great circle, in the full 2D spectral subspace. Rank-2 recovers this by sampling triples of hyperplane indices that sweep the entire sphere, not just a single loop.
 </p>
 
 <div class="insight-box">
