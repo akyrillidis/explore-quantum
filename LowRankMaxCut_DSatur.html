@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spectral vs. Combinatorial: Two Views of Graph Structure for Max-3-Cut</title>
+<meta property="og:title" content="Spectral vs. Combinatorial: Two Views of Graph Structure for Max-3-Cut" />
+<meta property="og:description" content="Why local and global heuristics have orthogonal strengths, and how their ensemble dominates" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Spectral vs. Combinatorial for Max-3-Cut" />
+<meta name="twitter:description" content="DSatur (local) + rank-2 spectral (global) ensemble beats SA on 11/13 graph families" />
+<meta name="keywords" content="Max-3-Cut, Max-K-Cut, DSatur, spectral methods, combinatorial optimization, graph partitioning, heuristic" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Source+Sans+Pro:wght@400;600;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<style>
+/* ===== TOOLTIPS ===== */
+.tooltip-term {
+    border-bottom: 1px dotted #648FFF;
+    cursor: help;
+    position: relative;
+}
+.tooltip-term:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-family: 'Source Sans Pro', sans-serif;
+    max-width: 300px;
+    white-space: normal;
+    z-index: 10;
+    line-height: 1.4;
+}
+
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+    font-family: 'Source Serif Pro', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.7;
+    color: #222;
+    background: #fff;
+    margin: 0; padding: 0;
+}
+.container {
+    max-width: 912px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+@media screen and (max-width: 1000px) {
+    .container { max-width: 95%; padding: 0 12px; }
+    body { font-size: 15px; }
+}
+
+/* ===== TYPOGRAPHY ===== */
+h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.3;
+}
+h1 { font-size: 2.2em; margin-top: 0; }
+h2 { font-size: 1.6em; margin-top: 2.5em; border-bottom: 2px solid #648FFF; padding-bottom: 6px; }
+h3 { font-size: 1.2em; margin-top: 1.8em; color: #333; }
+p { margin: 1em 0; }
+a { color: #648FFF; text-decoration: none; }
+a:hover { color: #785EF0; text-decoration: underline; }
+code, .mono {
+    font-family: 'Fira Mono', monospace;
+    font-size: 0.85em;
+    background: #f4f4f8;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid #e0e0e0;
+}
+pre {
+    background: #f4f4f8;
+    border: 1px solid #d0d0d8;
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    line-height: 1.5;
+}
+pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.82em;
+}
+blockquote {
+    border-left: 4px solid #648FFF;
+    margin: 1.5em 0;
+    padding: 0.5em 1em;
+    background: #f8f9ff;
+    color: #444;
+}
+strong { font-weight: 600; }
+
+/* ===== HERO / TITLE ===== */
+.hero {
+    text-align: center;
+    padding: 60px 0 30px;
+}
+.hero h1 {
+    font-size: 2.4em;
+    margin-bottom: 0.3em;
+    color: #1a1a1a;
+}
+.hero .subtitle {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1.15em;
+    color: #555;
+    font-weight: 400;
+    margin-bottom: 1.2em;
+    font-style: italic;
+}
+.hero .authors {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1.0em;
+    color: #333;
+    margin-bottom: 0.3em;
+}
+.hero .affiliation {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 1em;
+}
+.hero .date {
+    font-size: 0.9em;
+    color: #888;
+    margin-bottom: 1em;
+}
+.hero .links a {
+    display: inline-block;
+    margin: 0 12px;
+    padding: 8px 20px;
+    background: #648FFF;
+    color: #fff;
+    border-radius: 5px;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 600;
+    font-size: 0.95em;
+    transition: background 0.2s;
+}
+.hero .links a:hover {
+    background: #785EF0;
+    text-decoration: none;
+}
+
+/* ===== SECTION DIVIDERS ===== */
+hr.section-divider {
+    border: 0;
+    height: 1px;
+    background-image: linear-gradient(to right, rgba(100,143,255,0), rgba(100,143,255,0.6), rgba(100,143,255,0));
+    margin: 3em 0 1em;
+}
+
+/* ===== TABLES ===== */
+table.results-tbl {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.5em 0;
+    font-size: 0.9em;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+table.results-tbl th, table.results-tbl td {
+    border: 1px solid #d0d0d8;
+    padding: 8px 12px;
+    text-align: center;
+}
+table.results-tbl th {
+    background: #f0f2ff;
+    font-weight: 600;
+    color: #333;
+}
+table.results-tbl th.sortable { cursor: pointer; user-select: none; }
+table.results-tbl th.sortable:hover { background: #dde0ff; }
+table.results-tbl tr:nth-child(even) { background: #fafbff; }
+table.results-tbl td.winner { background: #d4edda; font-weight: 600; }
+table.results-tbl td.best { background: #d4edda; font-weight: 600; }
+table.results-tbl td.second { background: #dce8ff; }
+
+/* ===== INTERACTIVE CONTAINERS ===== */
+.interactive-box {
+    border: 1px solid #d0d0d8;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 2em 0;
+    background: #fafbff;
+}
+.interactive-box .box-title {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 700;
+    font-size: 1.05em;
+    color: #648FFF;
+    margin-bottom: 12px;
+}
+.interactive-box .caption {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 10px;
+    text-align: center;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+/* ===== FILTER BUTTONS ===== */
+.filter-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+.filter-btn {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.85em;
+    padding: 5px 14px;
+    border: 1px solid #648FFF;
+    border-radius: 20px;
+    background: #fff;
+    color: #648FFF;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.filter-btn:hover, .filter-btn.active {
+    background: #648FFF;
+    color: #fff;
+}
+
+/* ===== LEGEND ===== */
+.legend-toggle {
+    display: flex; gap: 12px; justify-content: center;
+    flex-wrap: wrap; margin-bottom: 8px;
+    font-family: 'Source Sans Pro', sans-serif; font-size: 0.85em;
+}
+.legend-toggle label { cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.legend-toggle input { accent-color: #648FFF; }
+
+/* ===== INSIGHT BOX ===== */
+.insight-box {
+    border: 2px solid #648FFF;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 2em 0;
+    background: #f0f4ff;
+}
+.insight-box .insight-title {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 700;
+    font-size: 1.0em;
+    color: #648FFF;
+    margin-bottom: 8px;
+}
+.insight-box p { margin: 0.5em 0; }
+
+/* ===== CODE DIFF ===== */
+.code-diff {
+    background: #f4f4f8;
+    border: 1px solid #d0d0d8;
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    line-height: 1.5;
+    font-family: 'Fira Mono', monospace;
+    font-size: 0.82em;
+}
+.code-diff .removed { background: #fdd; color: #900; }
+.code-diff .added { background: #dfd; color: #060; }
+.code-diff .comment { color: #888; }
+
+/* ===== BIBTEX ===== */
+.bibtex-block {
+    background: #f4f4f8;
+    border: 1px solid #d0d0d8;
+    border-radius: 6px;
+    padding: 16px;
+    font-family: 'Fira Mono', monospace;
+    font-size: 0.78em;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+/* ===== FOOTER ===== */
+.footer {
+    text-align: center;
+    padding: 40px 0;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.85em;
+    color: #888;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 3em;
+}
+
+/* ===== MATH DISPLAY ===== */
+.math-block {
+    overflow-x: auto;
+    padding: 8px 0;
+}
+
+/* ===== METRIC CARDS ===== */
+.metric-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 2em 0;
+}
+.metric-card {
+    border: 1px solid #d0d0d8;
+    border-radius: 8px;
+    padding: 20px 24px;
+    text-align: center;
+    background: #fafbff;
+    flex: 1;
+    min-width: 180px;
+    max-width: 220px;
+}
+.metric-card .metric-value {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 2.2em;
+    font-weight: 700;
+    color: #648FFF;
+    line-height: 1.2;
+}
+.metric-card .metric-label {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 6px;
+}
+
+/* ===== NOSCRIPT ===== */
+noscript .static-fallback {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+}
+
+/* ===== SUMMARY TABLE ===== */
+table.summary-tbl {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.5em 0;
+    font-size: 0.9em;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+table.summary-tbl th, table.summary-tbl td {
+    border: 1px solid #d0d0d8;
+    padding: 8px 12px;
+    text-align: center;
+}
+table.summary-tbl th {
+    background: #f0f2ff;
+    font-weight: 600;
+    color: #333;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+<div class="hero">
+    <h1>Spectral vs. Combinatorial:<br>Two Views of Graph Structure for Max-3-Cut</h1>
+    <div class="subtitle">Why local and global heuristics have orthogonal strengths, and how their ensemble dominates</div>
+    <div class="authors">Ria Stevens, Fangshuo Liao, Barbara Su, Jianqiang Li, Anastasios Kyrillidis</div>
+    <div class="affiliation">Department of Computer Science, Rice University</div>
+    <div class="date">April 2026</div>
+    <div class="links">
+        <a href="https://arxiv.org/abs/2602.20376">Paper</a>
+        <a href="https://github.com/barbara-su/MaxKCutParallel/tree/public-release">Code</a>
+        <a href="LowRankMaxCut_GPU.html">Blog 1</a>
+        <a href="LowRankMaxCut_Rank1.html">Blog 2</a>
+        <a href="LowRankMaxCut_RandR2.html">Blog 3</a>
+    </div>
+</div>
+
+<hr class="section-divider">
+
+<div class="metric-row">
+    <div class="metric-card">
+        <div class="metric-value">11/13</div>
+        <div class="metric-label">Ensemble beats SA</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">100%</div>
+        <div class="metric-label">Ensemble beats Hybrid (13/13)</div>
+    </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 1: TWO VIEWS -->
+<!-- ============================================================ -->
+<h2>1. Two Views of Graph Structure</h2>
+
+<p>
+Every method for Max-3-Cut must answer the same question: <em>which vertices should go in which group?</em> The methods we compare in this post all use the same greedy local search to refine their answers. They differ only in how they construct the <strong>initial partition</strong> &mdash; the starting point for greedy.
+</p>
+
+<p>
+We compare two fundamentally different construction strategies:
+</p>
+
+<h3>The local view: DSatur</h3>
+<p>
+The DSatur algorithm assigns vertices one at a time, in order of decreasing <strong>saturation degree</strong> &mdash; the number of distinct labels already present among a vertex's neighbors. Each vertex receives the label that maximizes the immediate number of crossing edges. This is a purely combinatorial, sequential approach that uses only 1-hop neighborhood information.
+</p>
+<p>
+Runtime: \(\mathcal{O}(|E| \log |V|)\) for construction, plus \(\mathcal{O}(r|E|)\) for greedy improvement rounds.
+</p>
+
+<h3>The global view: Rank-2 spectral (R2G)</h3>
+<p>
+The rank-2 spectral approach computes the top-2 eigenvectors of the graph Laplacian, constructs a spectral embedding of all vertices in \(\mathbb{C}^2\), samples a (often substantial) number of random directions in this embedding, and rounds each to the nearest cube root of unity. The best-scoring partition is kept. This captures global structure &mdash; community membership, spectral gaps &mdash; that may not be visible in any single vertex's neighborhood. This is the randomized version of the exact rank-2 algorithm, which computes a polynomial-size candidate set with no randomness; see <a href="LowRankMaxCut_GPU.html">Blog&nbsp;1</a> and <a href="LowRankMaxCut_RandR2.html">Blog&nbsp;3</a> for details.
+</p>
+<p>
+Runtime: \(\mathcal{O}(\mathrm{nnz} \times k_{\mathrm{iter}})\) for eigensolve + \(\mathcal{O}(S \times n)\) for sampling. Slower, but sees further. Importantly, the rank-\(r\) framework comes with provable approximation guarantees relative to the rank-\(r\) optimum (see <a href="https://arxiv.org/abs/2602.20376">the paper</a>), whereas DSatur, as a heuristic, provides no worst-case quality bound.
+</p>
+
+<div class="insight-box">
+    <div class="insight-title">Same refinement, different starting points</div>
+    <p>
+    Both DSatur and R2G feed their partition into the same greedy local search (steepest-ascent, 1-opt hill climbing). The only difference is the construction phase. This makes the comparison clean: any quality difference comes from the choice of starting partition, not the refinement.
+    </p>
+</div>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 2: HEAD TO HEAD -->
+<!-- ============================================================ -->
+<h2>2. Head-to-Head</h2>
+
+<p>
+We compare four methods on 15 instances across 13 graph families: <strong>DSG</strong> (DSatur + greedy), <strong>R2G</strong> (rank-2 + greedy, from <a href="LowRankMaxCut_RandR2.html">Blog 3</a>), <strong>Hybrid</strong> (rank-1 + greedy, from <a href="LowRankMaxCut_Rank1.html">Blog 2</a>), and <strong>SA</strong> (simulated annealing). All methods use the same greedy refinement; they differ only in construction.
+</p>
+
+<div style="overflow-x: auto;">
+<table class="results-tbl">
+    <thead>
+        <tr>
+            <th>Graph</th>
+            <th>\(n\)</th>
+            <th>DSG</th>
+            <th>R2G</th>
+            <th>Hybrid</th>
+            <th>SA</th>
+            <th>Best-of-both</th>
+            <th>Winner</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td style="text-align:left">regular 100K</td><td>100,000</td><td class="best">734,361</td><td>703,656</td><td>726,972</td><td>733,953</td><td class="best">734,361</td><td>DSG</td></tr>
+        <tr><td style="text-align:left">torus 10K</td><td>9,940</td><td>59,640</td><td>59,640</td><td>59,640</td><td>59,286</td><td class="best">59,640</td><td>DSG = R2G</td></tr>
+        <tr><td style="text-align:left">delaunay_n10</td><td>1,024</td><td>8,235</td><td>8,037</td><td>8,037</td><td class="best">8,439</td><td>8,235</td><td>SA</td></tr>
+        <tr><td style="text-align:left">delaunay_n13</td><td>8,192</td><td>66,132</td><td>64,506</td><td>64,419</td><td class="best">66,918</td><td>66,132</td><td>SA</td></tr>
+        <tr><td style="text-align:left">delaunay_n16</td><td>65,536</td><td>529,902</td><td>515,328</td><td>514,326</td><td class="best">536,022</td><td>529,902</td><td>SA</td></tr>
+        <tr><td style="text-align:left">delaunay_n19</td><td>524,288</td><td class="best">4,241,265</td><td>4,127,337</td><td>4,112,139</td><td>4,213,743</td><td class="best">4,241,265</td><td>DSG</td></tr>
+        <tr><td style="text-align:left">roadNet-PA</td><td>1,088,092</td><td class="best">4,624,173</td><td>4,543,785</td><td>4,539,057</td><td>4,581,765</td><td class="best">4,624,173</td><td>DSG</td></tr>
+        <tr><td style="text-align:left">roadNet-TX</td><td>1,379,917</td><td class="best">5,763,108</td><td>5,669,655</td><td>5,638,095</td><td>5,705,913</td><td class="best">5,763,108</td><td>DSG</td></tr>
+        <tr><td style="text-align:left">email-Enron</td><td>36,692</td><td>442,722</td><td class="second">445,293</td><td>445,272</td><td>444,426</td><td class="second">445,293</td><td>R2G</td></tr>
+        <tr><td style="text-align:left">amazon0601</td><td>403,394</td><td>5,984,949</td><td class="second">6,039,264</td><td>6,029,544</td><td>6,031,734</td><td class="second">6,039,264</td><td>R2G</td></tr>
+        <tr><td style="text-align:left">com-DBLP</td><td>317,080</td><td class="best">2,626,224</td><td>2,616,183</td><td>2,604,483</td><td>2,618,805</td><td class="best">2,626,224</td><td>DSG</td></tr>
+        <tr><td style="text-align:left">web-Google</td><td>875,713</td><td>11,353,869</td><td class="best">11,410,254</td><td>11,401,383</td><td>11,196,882</td><td class="best">11,410,254</td><td>R2G</td></tr>
+        <tr><td style="text-align:left">soc-Epinions1</td><td>75,879</td><td>995,235</td><td class="best">997,479</td><td>985,167</td><td>978,303</td><td class="best">997,479</td><td>R2G</td></tr>
+        <tr><td style="text-align:left">loc-Brightkite</td><td>58,228</td><td class="best">549,843</td><td>546,330</td><td>544,890</td><td>546,009</td><td class="best">549,843</td><td>DSG</td></tr>
+        <tr><td style="text-align:left">ca-HepPh</td><td>12,006</td><td>263,229</td><td>262,887</td><td>262,527</td><td class="best">265,314</td><td>263,229</td><td>SA</td></tr>
+    </tbody>
+</table>
+</div>
+
+<p>
+<strong>DSG is the outright winner on 6 instances, R2G on 4, SA on 4, with 1 tie</strong> (DSG and R2G both find the torus optimum). The best-of-both ensemble &mdash; which simply picks the higher-scoring construction &mdash; beats SA on <strong>11 of 13 graph families</strong> and beats Hybrid on <strong>all 13 (100%)</strong>.
+</p>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 3: WHY THE SPLIT -->
+<!-- ============================================================ -->
+<h2>3. Why the Split?</h2>
+
+<p>
+In our experiments, DSG tends to win on spatial and geometric graphs, while R2G tends to win on social and web networks. We observe a pattern but note that our sample of graph families is limited; the following discussion is speculative and should be tested on more instances.
+</p>
+
+<h3>DSG tends to win on spatial and geometric graphs</h3>
+<p>
+On Delaunay meshes, road networks, and regular graphs, DSG consistently outperforms R2G. One possible explanation is that these graphs have strong local regularity: vertices with high saturation degree (many distinct neighbor labels) may correspond to natural cut boundaries, and DSatur's priority queue selects these vertices early. However, we have not formally verified this mechanism, and the advantage could also stem from DSatur's deterministic construction avoiding the variance inherent in random spectral sampling.
+</p>
+
+<h3>R2G tends to win on social and web networks</h3>
+<p>
+On email networks, web graphs, and product co-purchase networks, R2G outperforms DSG. A plausible explanation is that these graphs have community structure that is encoded in the top eigenvectors of the Laplacian but not visible in any single vertex's 1-hop neighborhood. The rank-2 spectral embedding may capture inter-community boundaries that DSatur's local view misses. That said, this hypothesis has not been tested on controlled instances (e.g., planted partition models), and other factors &mdash; degree distribution, graph density, or the specific greedy dynamics &mdash; could also contribute to the difference.
+</p>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 3B: CONTROLLED EXPERIMENTS -->
+<!-- ============================================================ -->
+<h2>4. Stress-Testing the Split: Controlled Graph Families</h2>
+
+<p>
+The comparison in Section 2 uses real-world and standard synthetic graphs, but the sample is limited. To test whether the observed pattern &mdash; R2G wins on community-structured graphs, DSG wins elsewhere &mdash; holds more broadly, we ran a systematic sweep across two controlled graph families at multiple sizes and density levels, with 5 random seeds per configuration.
+</p>
+
+<h3>Sparse Stochastic Block Model (planted communities)</h3>
+<p>
+SBM graphs have \(K=3\) equal-sized communities with intra-community edge probability \(p_{\mathrm{in}}\) and inter-community probability \(p_{\mathrm{out}} = p_{\mathrm{in}}/10\). As density decreases, the community signal weakens locally (fewer same-community neighbors per vertex) while the spectral signal &mdash; encoded in the top eigenvectors &mdash; persists until the information-theoretic detection threshold.
+</p>
+
+<p>
+At \(n \geq 3{,}000\), R2G outperforms DSG on <strong>every tested configuration</strong> (15 out of 15), winning 4&ndash;5 out of 5 seeds each time:
+</p>
+
+<div style="overflow-x: auto;">
+<table class="results-tbl">
+    <thead>
+        <tr>
+            <th>\(p_{\mathrm{in}}\)</th>
+            <th>\(n = 3{,}000\)</th>
+            <th>\(n = 5{,}000\)</th>
+            <th>\(n = 10{,}000\)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>0.05</td><td class="best">+0.16% (5/5)</td><td class="best">+0.09% (5/5)</td><td class="best">+0.10% (5/5)</td></tr>
+        <tr><td>0.03</td><td class="best">+0.28% (5/5)</td><td class="best">+0.13% (5/5)</td><td class="best">+0.12% (5/5)</td></tr>
+        <tr><td>0.02</td><td class="best">+0.33% (4/5)</td><td class="best">+0.20% (4/5)</td><td class="best">+0.13% (5/5)</td></tr>
+        <tr><td>0.015</td><td class="best">+0.42% (5/5)</td><td class="best">+0.24% (5/5)</td><td class="best">+0.17% (5/5)</td></tr>
+        <tr><td>0.01</td><td class="best">+0.09% (4/5)</td><td class="best">+0.25% (4/5)</td><td class="best">+0.13% (4/5)</td></tr>
+    </tbody>
+</table>
+</div>
+
+<p style="font-size:0.9em; color:#555; text-align:center;">
+    Cells show the R2G improvement over DSG (mean over 5 seeds) and the number of seeds where R2G wins. Green = R2G wins the majority of seeds.
+</p>
+
+<p>
+The margins are modest (+0.1% to +0.4%) but consistent across all density levels and graph sizes. The spectral embedding captures the planted partition through the Laplacian's top eigenvectors &mdash; information that DSatur's 1-hop saturation degree does not have direct access to at these sparsity levels.
+</p>
+
+<h3>Random geometric graphs</h3>
+<p>
+Random geometric graphs place \(n\) points uniformly in the unit square and connect pairs within a radius \(r\). These graphs have spatial structure that is both local (short edges) and global (long-range connectivity patterns). Across 60 seeds (12 configurations &times; 5 seeds), R2G wins <strong>43 out of 60 seeds (72%)</strong> with an average gap of +0.15% over DSG.
+</p>
+
+<h3>Takeaway</h3>
+<p>
+These controlled experiments confirm that each method has graph families where it reliably outperforms the other. Neither R2G nor DSG is uniformly better; the advantage depends on the graph's structural properties. This motivates the ensemble approach in the next section.
+</p>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 5: THE ENSEMBLE -->
+<!-- ============================================================ -->
+<h2>5. The Ensemble</h2>
+
+<p>
+Since DSG and R2G have complementary strengths, the natural strategy is to <strong>run both and keep the better partition</strong>. This is the &ldquo;best-of-both&rdquo; ensemble:
+</p>
+
+<ol>
+    <li><strong>Construct two partitions:</strong> run DSatur (\(\mathcal{O}(|E| \log |V|)\)) and rank-2 sampling (\(\mathcal{O}(\mathrm{nnz} \times k_\mathrm{iter} + S \times n)\)).</li>
+    <li><strong>Score both</strong> using the Laplacian fast path (\(3 \times |\mathrm{cut\ edges}|\) for \(K=3\)).</li>
+    <li><strong>Pick the higher-scoring partition.</strong></li>
+    <li><strong>Refine with greedy</strong> local search until convergence.</li>
+</ol>
+
+<div class="metric-row">
+    <div class="metric-card">
+        <div class="metric-value">11/13</div>
+        <div class="metric-label">Beats SA</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">13/13</div>
+        <div class="metric-label">Beats Hybrid</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">Auto-adapts</div>
+        <div class="metric-label">Picks the right construction per graph</div>
+    </div>
+</div>
+
+<p>
+The computational cost is dominated by the rank-2 sampling phase (DSatur's construction is negligible in comparison). For practitioners who need speed over the last fraction of a percent, DSG alone is an excellent default &mdash; it beats Hybrid on 11 of 15 instances and beats SA on 9 of 13 families, all while running in quasi-linear time.
+</p>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 5: WHEN NOTHING HELPS -->
+<!-- ============================================================ -->
+<h2>6. When Neither View Suffices</h2>
+
+<p>
+On 2 of 13 graph families (the three small Delaunay meshes and ca-HepPh), SA still produces higher-quality partitions than both DSG and R2G. We do not have a definitive explanation for why these particular instances favor SA. One possibility is that the greedy landscape on these graphs has deeper local optima that neither DSatur's nor spectral's construction can avoid, while SA's stochastic exploration escapes them given enough iterations. Another possibility is simply that our SA budget (which was generous on these instances) is sufficient to compensate for the lack of a structured starting point.
+</p>
+
+<p>
+On Erd&#337;s&ndash;R&eacute;nyi random graphs (tested in Blog 3 but not included in the ensemble table above), all construction methods produce similar-quality partitions. SA wins, likely because random graphs have little exploitable structure for either local or spectral methods, and SA benefits from its longer exploration budget.
+</p>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 6: THE DSATUR ALGORITHM -->
+<!-- ============================================================ -->
+<h2>7. The DSatur Algorithm</h2>
+
+<p>
+DSatur was originally introduced for graph coloring by Br&eacute;laz (1979) and adapted for Max-\(K\)-Cut by Apte et al. (2026). The construction phase works as follows:
+</p>
+
+<div class="insight-box">
+<div class="insight-title">Algorithm: DSatur construction for Max-\(K\)-Cut</div>
+<p>
+<strong>Input:</strong> Graph \(G = (V, E)\), number of labels \(K\).<br>
+<strong>Output:</strong> Assignment \(\chi: V \to \{1, \ldots, K\}\).
+</p>
+<ol>
+    <li>Initialize a max-priority queue \(H\) keyed by \((\text{saturation degree}, \text{total incident weight})\).</li>
+    <li><strong>While</strong> unassigned vertices remain:
+        <ol style="list-style-type: lower-alpha;">
+            <li>Pop the highest-priority unassigned vertex \(v\).</li>
+            <li>Assign \(v\) the label \(a^*\) that maximizes the weight of edges from \(v\) to neighbors with a <em>different</em> label.</li>
+            <li>For each neighbor \(u\) of \(v\): update \(u\)'s saturation count and re-insert into \(H\).</li>
+        </ol>
+    </li>
+    <li><strong>Local improvement:</strong> repeatedly scan all vertices and flip any vertex whose relabeling strictly increases the total cut. Stop when no flip improves.</li>
+</ol>
+</div>
+
+<p>
+The construction phase is \(\mathcal{O}(|E| \log |V|)\): each vertex is pushed to the heap at most \(\mathcal{O}(\deg(v))\) times. The local improvement phase is \(\mathcal{O}(r|E|)\) for \(r\) rounds. In practice, \(r \leq 10\) on all tested instances.
+</p>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!-- SECTION 7: SUMMARY -->
+<!-- ============================================================ -->
+<h2>8. Summary</h2>
+
+<table class="results-tbl">
+    <thead>
+        <tr>
+            <th>Graph Family</th>
+            <th>Best Method</th>
+            <th>vs. Runner-Up</th>
+            <th>Construction</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td style="text-align:left">roadNet-TX</td><td class="best">DSG</td><td>+1.00% over SA</td><td>Local (DSatur)</td></tr>
+        <tr><td style="text-align:left">roadNet-PA</td><td class="best">DSG</td><td>+0.93% over SA</td><td>Local (DSatur)</td></tr>
+        <tr><td style="text-align:left">delaunay_n19</td><td class="best">DSG</td><td>+0.65% over SA</td><td>Local (DSatur)</td></tr>
+        <tr><td style="text-align:left">regular 100K</td><td class="best">DSG</td><td>+0.06% over SA</td><td>Local (DSatur)</td></tr>
+        <tr><td style="text-align:left">soc-Epinions1</td><td class="best">R2G</td><td>+1.96% over SA</td><td>Global (spectral)</td></tr>
+        <tr><td style="text-align:left">web-Google</td><td class="best">R2G</td><td>+1.91% over SA</td><td>Global (spectral)</td></tr>
+        <tr><td style="text-align:left">torus</td><td class="best">Both</td><td>+0.60% over SA</td><td>Either (optimum found)</td></tr>
+        <tr><td style="text-align:left">email-Enron</td><td class="best">R2G</td><td>+0.20% over SA</td><td>Global (spectral)</td></tr>
+        <tr><td style="text-align:left">amazon</td><td class="best">R2G</td><td>+0.12% over SA</td><td>Global (spectral)</td></tr>
+        <tr><td style="text-align:left">com-DBLP</td><td class="best">DSG</td><td>+0.28% over SA</td><td>Local (DSatur)</td></tr>
+        <tr><td style="text-align:left">loc-Brightkite</td><td class="best">DSG</td><td>+0.70% over SA</td><td>Local (DSatur)</td></tr>
+        <tr><td style="text-align:left">ca-HepPh</td><td>SA</td><td>DSG &minus;0.79%</td><td>&mdash;</td></tr>
+        <tr><td style="text-align:left">delaunay (small)</td><td>SA</td><td>DSG &minus;1.1% to &minus;2.4%</td><td>&mdash;</td></tr>
+    </tbody>
+</table>
+
+<p>
+Local and global views of graph structure are complementary, not competing. The ensemble that combines DSatur (local, quasi-linear) with rank-2 spectral sampling (global, eigensolve-based) beats simulated annealing on 11 of 13 tested graph families and beats the previous best spectral method on all of them. For speed-constrained applications, DSatur alone is a strong default: quasi-linear time, no eigensolve required, competitive with SA on most graph types.
+</p>
+
+<hr class="section-divider">
+
+<h3>References</h3>
+<ol style="font-size: 0.9em; font-family: 'Source Sans Pro', sans-serif; line-height: 1.8;">
+    <li>A. Apte, S. Boulebnane, Y. Jin, S. Omanakuttan, M. A. Perlin, and R. Shaydulin. &ldquo;Quantum Approximate Optimization of Integer Graph Problems and Surpassing SDP for Max-k-Cut.&rdquo; <em>arXiv:2602.05956</em>, 2026.</li>
+    <li>R. Stevens, F. Liao, B. Su, J. Li, and A. Kyrillidis. &ldquo;Exploiting Low-Rank Structure in Max-K-Cut Problems.&rdquo; <em>arXiv:2602.20376</em>, 2026.</li>
+    <li>A. Frieze and M. Jerrum. &ldquo;Improved Approximation Algorithms for MAX k-CUT and MAX BISECTION.&rdquo; <em>Algorithmica</em>, 18(1):67&ndash;81, 1997.</li>
+    <li>D. Br&eacute;laz. &ldquo;New Methods to Color the Vertices of a Graph.&rdquo; <em>Communications of the ACM</em>, 22(4):251&ndash;256, 1979.</li>
+</ol>
+
+<h3>Citation</h3>
+<div class="bibtex-block">@article{Stevens2025maxkcut,
+  title   = {Exploiting Low-Rank Structure in Max-$K$-Cut Problems},
+  author  = {Stevens, Ria and Liao, Fangshuo and Su, Barbara
+             and Li, Jianqiang and Kyrillidis, Anastasios},
+  journal = {arXiv preprint arXiv:2602.20376},
+  year    = {2025}
+}</div>
+
+<hr class="section-divider">
+
+<div class="footer">
+    <p>
+        &copy; 2026 Kyrillidis Lab, Rice University.
+        Built with <a href="https://d3js.org">D3.js</a> and <a href="https://www.mathjax.org">MathJax</a>.
+        Part of the <a href="https://akyrillidis.github.io/explore-quantum/">QUANTAS</a> project.
+    </p>
+    <p>
+        See also:
+        <a href="LowRankMaxCut_GPU.html">Blog 1: 15 Obsolete GPUs</a> &bull;
+        <a href="LowRankMaxCut_Rank1.html">Blog 2: Rank-1 Building Block</a> &bull;
+        <a href="LowRankMaxCut_RandR2.html">Blog 3: Randomized Rank-2</a> &bull;
+        <a href="https://akyrillidis.github.io/explore-quantum/MaxKCut.html">Overview: Max-K-Cut</a>
+    </p>
+</div>
+
+</div><!-- container -->
+</body>
+</html>

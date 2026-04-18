@@ -8,3 +8,4 @@ layout: default
   - [What Can 15 Obsolete GPUs Do for Combinatorial Optimization?](./LowRankMaxCut_GPU.html) *(GPU implementation follow-up)*
   - [Rank-1 as a Building Block for Million-Node Max-3-Cut](./LowRankMaxCut_Rank1.html) *(Incremental scoring, hybrid warm-starts, extreme scale)*
   - [Randomized Rank-2 for Max-3-Cut: When Two Eigenvectors Beat One](./LowRankMaxCut_RandR2.html) *(3-phase pipeline beats SA on 6/12 graph families)*
+  - [Spectral vs. Combinatorial: Two Views of Graph Structure for Max-3-Cut](./LowRankMaxCut_DSatur.html) *(Local + global ensemble beats SA on 11/13 families)*
