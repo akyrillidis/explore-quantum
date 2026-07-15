@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Many Darts to Hit a Maximum? The Sample-Complexity Theory of Randomized Low-Rank Rounding</title>
+<meta name="description" content="Three tools — a rounding margin, a spherical cap, and a variance ratio — prove that the number of random samples needed for a near-optimal Max-K-Cut does not grow with the graph.">
+<meta property="og:title" content="How Many Darts to Hit a Maximum? The Sample-Complexity Theory of Randomized Low-Rank Rounding" />
+<meta property="og:description" content="Why a handful of random directions matches exhaustive enumeration on million-node graphs: the margin, the cap, and Paley–Zygmund." />
+<meta property="og:image" content="https://akyrillidis.github.io/explore-quantum/assets/img/theory_sampling_n_independence.png" />
+<meta property="og:type" content="article" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="How Many Darts to Hit a Maximum?" />
+<meta name="twitter:description" content="The theory behind randomized low-rank rounding: a rounding margin, a Beta-distributed cap, and a variance ratio — none of which grow with n." />
+<meta name="twitter:image" content="https://akyrillidis.github.io/explore-quantum/assets/img/theory_sampling_n_independence.png" />
+<meta name="keywords" content="Max-K-Cut, Max-3-Cut, randomized rounding, sample complexity, low-rank, quadratic optimization, Hahn-Banach, Paley-Zygmund, Beta distribution, spectral methods, roots of unity">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Source+Sans+Pro:wght@400;600;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+<style>
+/* ===== TOOLTIPS ===== */
+.tooltip-term { border-bottom: 1px dotted #648FFF; cursor: help; position: relative; }
+.tooltip-term:hover::after {
+    content: attr(data-tooltip);
+    position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+    background: #333; color: #fff; padding: 6px 10px; border-radius: 4px;
+    font-size: 0.8em; font-family: 'Source Sans Pro', sans-serif;
+    max-width: 320px; white-space: normal; z-index: 10; line-height: 1.4;
+}
+
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+    font-family: 'Source Serif Pro', Georgia, serif;
+    font-size: 17px; line-height: 1.7; color: #222; background: #fff;
+    margin: 0; padding: 0;
+}
+.container { max-width: 912px; margin: 0 auto; padding: 0 24px; }
+@media screen and (max-width: 1000px) {
+    .container { max-width: 95%; padding: 0 12px; }
+    body { font-size: 15px; }
+}
+
+/* ===== TYPOGRAPHY ===== */
+h1, h2, h3, h4 { font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-weight: 700; color: #1a1a1a; line-height: 1.3; }
+h1 { font-size: 2.2em; margin-top: 0; }
+h2 { font-size: 1.6em; margin-top: 2.5em; border-bottom: 2px solid #648FFF; padding-bottom: 6px; }
+h3 { font-size: 1.2em; margin-top: 1.8em; color: #333; }
+p { margin: 1em 0; }
+a { color: #648FFF; text-decoration: none; }
+a:hover { color: #785EF0; text-decoration: underline; }
+code, .mono { font-family: 'Fira Mono', monospace; font-size: 0.85em; background: #f4f4f8; padding: 2px 6px; border-radius: 3px; border: 1px solid #e0e0e0; }
+blockquote { border-left: 4px solid #648FFF; margin: 1.5em 0; padding: 0.5em 1em; background: #f8f9ff; color: #444; }
+strong { font-weight: 600; }
+table { border-collapse: collapse; margin: 1.5em auto; font-size: 0.92em; }
+th, td { padding: 8px 14px; text-align: center; border-bottom: 1px solid #ddd; }
+th { font-family: 'Source Sans Pro', sans-serif; border-bottom: 2px solid #648FFF; background: #f8f9ff; }
+
+/* ===== HERO ===== */
+.hero { text-align: center; padding: 60px 0 30px; }
+.hero h1 { font-size: 2.2em; margin-bottom: 0.3em; color: #1a1a1a; }
+.hero .subtitle { font-family: 'Source Sans Pro', sans-serif; font-size: 1.15em; color: #555; font-weight: 400; margin-bottom: 1.2em; font-style: italic; }
+.hero .authors { font-family: 'Source Sans Pro', sans-serif; font-size: 1.0em; color: #333; margin-bottom: 0.3em; }
+.hero .date { font-size: 0.9em; color: #888; margin-bottom: 1em; }
+.hero .links a {
+    display: inline-block; margin: 4px 8px; padding: 8px 18px;
+    background: #648FFF; color: #fff; border-radius: 20px;
+    font-family: 'Source Sans Pro', sans-serif; font-size: 0.9em; font-weight: 600;
+}
+.hero .links a:hover { background: #785EF0; text-decoration: none; }
+.hero .links .chip-muted { background: #eceef5; color: #555; }
+.hero .links .chip-muted:hover { background: #e0e3ee; }
+
+/* ===== READING GUIDE ===== */
+.reading-guide {
+    background: #fbf9f2; border: 1px solid #e8e2cf; border-radius: 8px;
+    padding: 12px 18px; margin: 1.5em 0; font-size: 0.92em;
+    font-family: 'Source Sans Pro', sans-serif; color: #555;
+}
+
+/* ===== THEOREM BOXES (expert register) ===== */
+.theorem-box {
+    background: #f7f5ff; border: 1px solid #d4c9f5; border-left: 5px solid #785EF0;
+    border-radius: 6px; padding: 16px 20px; margin: 1.6em 0;
+}
+.theorem-box .thm-title { font-family: 'Source Sans Pro', sans-serif; font-weight: 700; color: #4c3a9e; margin-bottom: 6px; font-size: 0.95em; text-transform: uppercase; letter-spacing: 0.04em; }
+.theorem-box p { margin: 0.5em 0; }
+
+/* ===== PROOF-IDEA BOXES ===== */
+.proofidea-box {
+    background: #fafafa; border: 1px dashed #bbb; border-radius: 6px;
+    padding: 14px 18px; margin: 1.2em 0; font-size: 0.95em;
+}
+.proofidea-box .pi-title { font-family: 'Source Sans Pro', sans-serif; font-weight: 700; color: #666; margin-bottom: 4px; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* ===== INSIGHT BOXES ===== */
+.insight-box {
+    background: #f0f6ff; border: 1px solid #bcd2ff; border-left: 5px solid #648FFF;
+    border-radius: 6px; padding: 16px 20px; margin: 1.6em 0;
+}
+.insight-box .insight-title { font-family: 'Source Sans Pro', sans-serif; font-weight: 700; color: #2a5bd7; margin-bottom: 6px; }
+.insight-box p { margin: 0.5em 0; }
+
+/* ===== TOOLBOX CARDS ===== */
+.toolbox-card {
+    background: #fffdf5; border: 1px solid #ecdfa8; border-left: 5px solid #FFB000;
+    border-radius: 6px; padding: 14px 18px; margin: 1.6em 0;
+}
+.toolbox-card .tb-title { font-family: 'Source Sans Pro', sans-serif; font-weight: 700; color: #8a6712; margin-bottom: 4px; }
+.toolbox-card .tb-title::before { content: "🧰 "; }
+.toolbox-card p { margin: 0.4em 0; font-size: 0.95em; }
+.toolbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 1.5em 0; }
+.toolbox-grid .toolbox-card { margin: 0; }
+@media (max-width: 700px) { .toolbox-grid { grid-template-columns: 1fr; } }
+
+/* ===== INTERACTIVE BOXES ===== */
+.interactive-box {
+    background: #fcfcfe; border: 2px solid #648FFF; border-radius: 10px;
+    padding: 18px; margin: 2em 0;
+}
+.interactive-box .box-title { font-family: 'Source Sans Pro', sans-serif; font-weight: 700; font-size: 1.05em; color: #2a5bd7; margin-bottom: 10px; }
+.interactive-box .caption { font-size: 0.88em; color: #666; margin-top: 10px; line-height: 1.5; }
+.interactive-box .controls { font-family: 'Source Sans Pro', sans-serif; font-size: 0.9em; margin: 10px 0; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+.interactive-box .controls label { font-weight: 600; color: #444; }
+.interactive-box input[type=range] { vertical-align: middle; width: 180px; }
+.interactive-box button {
+    font-family: 'Source Sans Pro', sans-serif; font-weight: 600; font-size: 0.88em;
+    background: #648FFF; color: #fff; border: none; border-radius: 16px;
+    padding: 6px 16px; cursor: pointer;
+}
+.interactive-box button:hover { background: #785EF0; }
+.interactive-box button.secondary { background: #eceef5; color: #444; }
+.interactive-box .readout { font-family: 'Fira Mono', monospace; font-size: 0.85em; background: #f4f4f8; border: 1px solid #e0e0e0; border-radius: 4px; padding: 3px 8px; }
+.svg-wrap { text-align: center; overflow-x: auto; }
+
+/* ===== FIGURES ===== */
+.figure { text-align: center; margin: 2em 0; }
+.figure img { max-width: 100%; border-radius: 6px; }
+.figure .figcap { font-size: 0.88em; color: #666; margin-top: 8px; text-align: left; line-height: 1.5; }
+.figure .figcap strong { color: #444; }
+
+/* ===== BADGE ===== */
+.n-badge {
+    display: inline-block; font-family: 'Source Sans Pro', sans-serif; font-weight: 700;
+    background: #DC267F; color: #fff; border-radius: 14px; padding: 2px 12px; font-size: 0.85em;
+}
+
+/* ===== FOOTER ===== */
+.footer { border-top: 2px solid #648FFF; margin-top: 3em; padding: 1.5em 0 2.5em; font-size: 0.88em; color: #666; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ================= HERO ================= -->
+<div class="hero">
+    <h1>How Many Darts to Hit a Maximum?</h1>
+    <div class="subtitle">The sample-complexity theory of randomized low-rank rounding — a rounding margin, a spherical cap, and a variance ratio, none of which grow with the graph</div>
+    <div class="authors">OptimaLab and QuanTAS &middot; Rice University</div>
+    <div class="date">July 2026</div>
+    <div class="links">
+        <a href="MaxKCut.html">Series overview</a>
+        <a href="LowRankMaxCut_GPU.html">Blog 1: GPUs</a>
+        <a href="LowRankMaxCut_Rank1.html">Blog 2: Rank-1</a>
+        <a href="LowRankMaxCut_RandR2.html">Blog 3: Randomized</a>
+        <a href="LowRankMaxCut_DSatur.html">Blog 4: DSatur</a>
+    </div>
+</div>
+
+<!-- ================= SECTION 1 ================= -->
+<h2>1. The problem, and the wall</h2>
+
+<p>
+This series is about one optimization problem. Take a matrix \(\mathbf{Q} \in \mathbb{C}^{n\times n}\)
+(Hermitian, positive semidefinite) and maximize the quadratic form
+\[
+\max_{\mathbf{z}\in\mathcal{A}_K^n} \mathbf{z}^\dagger \mathbf{Q} \mathbf{z},
+\qquad
+\mathcal{A}_K = \{1, \omega, \omega^2, \dots, \omega^{K-1}\}, \omega = e^{2\pi \imath /K},
+\]
+where every coordinate of \(\mathbf{z}\) must be one of the \(K\)-th
+<span class="tooltip-term" data-tooltip="The K complex numbers whose K-th power equals 1. They sit at K equally spaced angles on the unit circle — a natural alphabet for 'K colors'.">roots of unity</span>.
+For \(K=3\) this encodes <strong>Max-3-Cut</strong>: color the \(n\) vertices of a graph with 3 colors so as to cut as many
+edges as possible. In <a href="LowRankMaxCut_GPU.html">Blog&nbsp;1</a> and <a href="LowRankMaxCut_Rank1.html">Blog&nbsp;2</a>
+we exploited the structural fact that when \(\mathbf{Q} = \mathbf{V}\mathbf{V}^\dagger\) has <strong>rank \(r\)</strong>,
+the problem stops being a search over \(K^n\) colorings: the global maximizer provably lives in a candidate set of size
+\(O(rn^{2r-1})\), enumerable by walking the cells of a
+<span class="tooltip-term" data-tooltip="Cut the sphere of directions with O(n) hyperplanes; the sphere shatters into cells. Within one cell, the rounded assignment never changes.">hyperplane arrangement</span>.
+Exact, deterministic, embarrassingly parallel.
+</p>
+
+<p>
+But polynomial is not the same as cheap. At rank \(r=2\) the candidate set is \(O(n^3)\):
+for a million-node graph that is \(10^{18}\) candidates — <em>enumeration is dead on arrival</em>,
+even with <a href="LowRankMaxCut_GPU.html">15 GPUs</a>. Meanwhile <a href="LowRankMaxCut_RandR2.html">Blog&nbsp;3</a>
+found something suspicious in experiments: sampling a few random candidates got within a whisker of the
+exhaustive optimum, and the number of samples needed <em>did not budge</em> as \(n\) grew.
+</p>
+
+<blockquote>
+That empirical mystery deserved a theory. This post is the theory: three theorems that explain
+<em>why throwing darts works</em>, and exactly how many darts you need.
+</blockquote>
+
+<p>
+The randomized algorithm is almost embarrassing to state. The candidate set of the exact algorithm is indexed by
+directions on a sphere: every unit vector \(\mathbf{c} \in \mathbb{C}^r\) gets <em>rounded</em> into a coloring
+\(\mathbf{z}(\mathbf{c})\) — coordinate \(i\) receives the root of unity nearest in phase to
+\(\langle \mathbf{v}_i, \mathbf{c}\rangle\) (with \(\mathbf{v}_i\) the \(i\)-th row of \(\mathbf{V}\)).
+So instead of enumerating all the cells of the arrangement:
+</p>
+
+<ul>
+<li><strong>Throw a dart:</strong> draw \(\mathbf{c} \sim \mathrm{Unif}(\mathbb{S}_{\mathbb{C}}^{r})\), uniform on the complex unit sphere.</li>
+<li><strong>Round it:</strong> compute \(\mathbf{z}(\mathbf{c})\) and its value \(f(\mathbf{c}) = \mathbf{z}(\mathbf{c})^\dagger \mathbf{Q}\mathbf{z}(\mathbf{c})\).</li>
+<li><strong>Repeat \(S\) times, keep the best.</strong></li>
+</ul>
+
+<p>
+The entire analysis question: <em>how much probability mass do the good cells carry?</em>
+If near-optimal cells occupy a decent fraction of the sphere, few darts suffice. If they shrink as \(n\) grows,
+sampling is doomed at scale. No off-the-shelf bound answers this — the cells are defined by the data.
+That is what the paper proves, and the answer is: <strong>the mass of the good region is controlled
+by quantities that do not involve \(n\) at all.</strong>
+</p>
+
+<!-- ================= INTERACTIVE 1 ================= -->
+<div class="interactive-box" id="dartboard-box">
+    <div class="box-title">🎯 The whole story at rank 1: rotate, round, score</div>
+    <div class="controls">
+        <label>direction \(\varphi\):</label>
+        <input type="range" id="phi-slider" min="0" max="6.283" step="0.002" value="0.6">
+        <span class="readout" id="phi-readout">φ = 0.60</span>
+        <button id="throw-btn">Throw 200 darts</button>
+        <button id="clear-btn" class="secondary">Clear</button>
+    </div>
+    <div class="svg-wrap"><svg id="dartboard-svg" width="740" height="400" viewBox="0 0 740 400"></svg></div>
+    <div class="controls" style="justify-content:center;">
+        <span class="readout" id="score-readout">f(φ)/OPT = —</span>
+        <span class="readout" id="gold-readout">gold fraction = —</span>
+        <span class="readout" id="dart-readout">darts: —</span>
+    </div>
+    <div class="caption">
+        <strong>Left:</strong> at rank 1 a "direction" is a single phase \(\varphi\) on a circle. Each dot is one
+        coordinate of the problem (a phasor at angle \(\theta_i + \varphi\)); its color is the root of unity it rounds to
+        (background wedges = the \(K=3\) rounding sectors, dashed rays = decision boundaries).
+        Dragging \(\varphi\) rotates all phasors <em>together</em>; the coloring only changes when some phasor crosses
+        a boundary. <strong>Right:</strong> the objective \(f(\varphi)\) is therefore a <em>staircase</em>: constant on
+        each of the \(nK\) cells, jumping at boundaries. Gold cells achieve the optimum — and there are always
+        \(K\) copies of them, because relabeling the colors cyclically shifts \(\varphi\) by \(2\pi/K\)
+        without changing the cut. A uniform dart hits gold with probability exactly the gold fraction —
+        which is the <em>margin</em> \(\eta\) of Theorem&nbsp;1. Throw the darts and check.
+    </div>
+</div>
+
+<!-- ================= SECTION 2 ================= -->
+<h2>2. Rank one: the margin theorem</h2>
+
+<p>
+Start where the geometry is a circle. At rank 1, \(f(\varphi)\) is a staircase over \([0, 2\pi)\)
+(you just played with it above). The dart hits the <em>exact</em> optimum whenever it lands in an optimal cell.
+So the only question is: <em>how wide are the optimal cells?</em>
+</p>
+
+<p>
+The paper's answer introduces a single instance parameter. At an optimal direction \(\varphi^\star\), look at how far
+every phasor sits from its nearest decision boundary; the <strong>rounding margin</strong> \(\eta \in (0,1]\)
+is that closest distance, normalized so that \(\eta = 1\) means "every phasor is dead-center in its sector."
+It plays exactly the role a condition number plays in numerical analysis: it is not an assumption,
+it is a <em>name for the difficulty of your instance</em>. Well-separated optimum → big margin → wide gold cells.
+Optimum that barely wins → thin margin → you'll need more darts.
+</p>
+
+<div class="theorem-box">
+    <div class="thm-title">Theorem 1 — exact recovery at rank 1</div>
+    <p>
+    Let \(\mathbf{Q}_1 = \mathbf{V}\mathbf{V}^\dagger\) be rank-1 PSD, and draw
+    \(\varphi \sim \mathrm{Unif}[0, 2\pi)\). Under general position, with \(\eta\) the rounding margin of the optimum:
+    \[
+        \Pr\big[ f(\varphi) = \mathrm{OPT}_1 \big] \geq \eta .
+    \]
+    Consequently \(S \geq \log(1/\delta)/\eta\) i.i.d. draws recover the <em>exact</em> rank-1 optimum
+    with probability at least \(1 - \delta\).
+    </p>
+</div>
+
+<div class="proofidea-box">
+    <div class="pi-title">Why it's true, in four moves</div>
+    <p>
+    (1) \(f\) is piecewise constant with \(nK\) cells — so "hit the optimum" means "land in an optimal cell."
+    (2) A hidden symmetry multiplies your target: shifting \(\varphi\) by \(2\pi/K\) increments <em>every</em>
+    coordinate's root by one — a global relabel of the colors — which leaves \(\mathbf{z}^\dagger\mathbf{Q}\mathbf{z}\)
+    unchanged. So the optimal cell has \(K\) rotated copies, all optimal, all disjoint.
+    (3) The margin \(\eta\) forces each copy to have width at least \(2\pi\eta/K\): the cell around \(\varphi^\star\)
+    extends until the <em>first</em> phasor hits a boundary, and every phasor is at least \(\eta \pi/K\) away on each side.
+    (4) Add up: \(K\) disjoint arcs, each of width \(\geq 2\pi\eta/K\), on a circle of circumference \(2\pi\) — total mass \(\geq \eta\).
+    </p>
+</div>
+
+<!-- ================= SECTION 3 ================= -->
+<h2>3. Rank \(r\): a cap on the sphere</h2>
+
+<p>
+At rank \(r \geq 2\) the dartboard is the complex unit sphere \(\mathbb{S}_{\mathbb{C}}^{r}\)
+(real dimension \(2r\)), the cells are patches cut by \(O(n)\) hyperplanes, and there is no hope of tracking
+individual cells. The paper takes a different route, and this is where the classical tools come out.
+The result first:
+</p>
+
+<div class="theorem-box">
+    <div class="thm-title">Theorem 2 — the Beta tail (no assumptions)</div>
+    <p>
+    Let \(K \geq 2\), \(r \geq 2\), \(\mathbf{V}\) of full column rank. For any \(\varepsilon \in (0,1)\),
+    a single uniform draw \(\mathbf{c} \sim \mathrm{Unif}(\mathbb{S}_{\mathbb{C}}^{r})\) satisfies
+    \[
+        \Pr\Big[ f(\mathbf{c}) \geq \cos^2(\pi/K)(1-\varepsilon) \mathrm{OPT}_r \Big]
+        \geq \varepsilon^{r-1},
+    \]
+    and \(S \geq \log(1/\delta)/\varepsilon^{r-1}\) draws reach that threshold with probability \(\geq 1-\delta\).
+    </p>
+</div>
+
+<p>
+Read the statement twice, because two things about it are remarkable.
+<span class="n-badge">n appears nowhere</span> — not in the success probability, not in the sample count.
+The graph can have a thousand nodes or a million; the dart budget is the same.
+And it holds <em>unconditionally</em>: no incoherence, no eigengap, no randomness of the instance —
+the probability is only over your own darts.
+The price is the factor \(\cos^2(\pi/K)\) (\(=1/4\) at \(K=3\)) and the exponent \(r-1\),
+which makes the bound sharpest at small rank — exactly the regime the whole series lives in.
+</p>
+
+<p>
+The proof is a three-step pincer. It never looks at cells at all; it reduces everything to a
+<em>single scalar random variable</em> — the alignment between your dart and one special direction.
+</p>
+
+<h3>Step 1 — Rounding never loses more than a cosine</h3>
+<p>
+When coordinate \(i\) rounds to the nearest root of unity, the phase error is at most \(\pi/K\)
+(half a sector). Summing over coordinates, the rounded coloring retains a \(\cos(\pi/K)\) fraction of the
+"analog" signal \(N(\mathbf{c}) := \|\mathbf{V}\mathbf{c}\|_1\):
+\[
+    f(\mathbf{c}) \geq \cos^2(\pi/K) N(\mathbf{c})^2 .
+\]
+This is deterministic — true for every dart. It converts a question about the discrete \(f\) into a question about
+the continuous, convex \(N\).
+</p>
+
+<h3>Step 2 — Hahn–Banach builds the ruler</h3>
+<p>
+\(N\) is a norm-like function on \(\mathbb{C}^r\); let \(M = \max_{\|\mathbf{c}\|_2 = 1} N(\mathbf{c})\)
+be its peak on the sphere, achieved at \(\mathbf{c}^\star\). Two classical facts sandwich everything:
+</p>
+<ul>
+<li><strong>Duality upstairs:</strong> \(\mathrm{OPT}_r \leq M^2\). (Any coloring's value is at most the analog peak.)</li>
+<li><strong>Support functional downstairs:</strong> by the <span class="tooltip-term" data-tooltip="The extension theorem of functional analysis. Used here in its geometric form: every point on the boundary of a convex body admits a supporting hyperplane — a linear functional that is exact there and never exceeds the body's gauge.">Hahn–Banach theorem</span>,
+there is a vector \(\mathbf{a}\) with \(|\mathbf{a}^\dagger \mathbf{c}| \leq N(\mathbf{c})\) for <em>every</em>
+\(\mathbf{c}\), with equality (\(=M\)) at \(\mathbf{c}^\star\), hence \(\|\mathbf{a}\|_2 \geq M\).</li>
+</ul>
+
+<div class="figure">
+<svg width="640" height="250" viewBox="0 0 640 250" role="img" aria-label="Hahn-Banach support functional: a convex body with a supporting hyperplane touching at the maximizer">
+  <!-- convex body: unit ball of N -->
+  <path d="M 150 125 C 150 70, 220 45, 280 60 C 340 75, 370 100, 365 135 C 358 180, 290 205, 230 195 C 175 186, 150 165, 150 125 Z"
+        fill="#f0f6ff" stroke="#648FFF" stroke-width="2.5"/>
+  <text x="248" y="135" font-family="Source Sans Pro" font-size="15" fill="#2a5bd7" text-anchor="middle">the "analog" ball</text>
+  <text x="248" y="155" font-family="Source Sans Pro" font-size="14" fill="#2a5bd7" text-anchor="middle">N(c) ≤ M</text>
+  <!-- support line -->
+  <line x1="300" y1="20" x2="450" y2="220" stroke="#DC267F" stroke-width="2.5"/>
+  <circle cx="366" cy="108" r="6" fill="#DC267F"/>
+  <text x="386" y="100" font-family="Source Sans Pro" font-size="14" fill="#DC267F">c★ (the peak)</text>
+  <!-- normal arrow a -->
+  <line x1="366" y1="108" x2="470" y2="66" stroke="#8a6712" stroke-width="2.5" marker-end="url(#arrowA)"/>
+  <text x="480" y="62" font-family="Source Sans Pro" font-size="15" font-weight="600" fill="#8a6712">a</text>
+  <defs><marker id="arrowA" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 Z" fill="#8a6712"/></marker></defs>
+  <text x="500" y="130" font-family="Source Serif Pro" font-size="14" fill="#444">|a†c| ≤ N(c) everywhere,</text>
+  <text x="500" y="152" font-family="Source Serif Pro" font-size="14" fill="#444">= M at the touch point</text>
+  <text x="500" y="180" font-family="Source Sans Pro" font-size="13" fill="#888">a linear ruler that never</text>
+  <text x="500" y="198" font-family="Source Sans Pro" font-size="13" fill="#888">over-measures the signal</text>
+</svg>
+<div class="figcap"><strong>The Hahn–Banach move.</strong> The convex body is the region where the analog signal
+\(N\) is at most its peak \(M\); the pink line is the supporting hyperplane at the maximizer \(\mathbf{c}^\star\).
+Its normal \(\mathbf{a}\) defines a <em>linear</em> lower bound on \(N\) that is tight at the top — replacing an
+awkward maximum of \(n\) absolute values by a single inner product.</div>
+</div>
+
+<h3>Step 3 — The alignment is a Beta variable, and caps have exact mass</h3>
+<p>
+Now everything hinges on the scalar \(X = |\mathbf{u}^\dagger \mathbf{c}|^2\), the squared alignment between your
+uniform dart \(\mathbf{c}\) and the fixed direction \(\mathbf{u} = \mathbf{a}/\|\mathbf{a}\|_2\).
+On the <em>complex</em> \(r\)-sphere this has a beautiful exact law:
+\[
+    X \sim \mathrm{Beta}(1, r-1)
+    \qquad\Longrightarrow\qquad
+    \Pr[X \geq 1-\varepsilon] = \varepsilon^{r-1} .
+\]
+No inequality, no hidden constant — the probability that a random direction lands in the
+\((1-\varepsilon)\)-alignment cap is <em>exactly</em> \(\varepsilon^{r-1}\). On that event, chain the three facts:
+\[
+f(\mathbf{c}) \geq \cos^2(\pi/K) N(\mathbf{c})^2
+ \geq \cos^2(\pi/K)|\mathbf{a}^\dagger\mathbf{c}|^2
+ \geq \cos^2(\pi/K)(1-\varepsilon)M^2
+ \geq \cos^2(\pi/K)(1-\varepsilon)\mathrm{OPT}_r . \blacksquare
+\]
+</p>
+
+<div class="toolbox-card">
+    <div class="tb-title">Tool #1 — The Hahn–Banach support functional</div>
+    <p>
+    <em>What it does:</em> replaces a complicated convex function (here \(N(\mathbf{c}) = \sum_i |\langle \mathbf{v}_i, \mathbf{c}\rangle|\),
+    a sum of \(n\) moduli) by a single linear functional that never exceeds it and is exact at the maximizer.
+    <em>Why you care:</em> linear functionals of uniform sphere vectors have known laws; sums of \(n\) moduli do not.
+    One theorem deletes the \(n\)-body problem. It is the same move that powers dual certificates in compressed sensing.
+    </p>
+</div>
+
+<div class="toolbox-card">
+    <div class="tb-title">Tool #2 — Beta laws on the complex sphere</div>
+    <p>
+    <em>What it does:</em> for \(\mathbf{c}\) uniform on \(\mathbb{S}_\mathbb{C}^{r}\) and any fixed unit \(\mathbf{u}\),
+    the alignment \(|\mathbf{u}^\dagger\mathbf{c}|^2\) is exactly \(\mathrm{Beta}(1, r-1)\) — so cap probabilities are
+    polynomials, not integrals. <em>The subtlety worth remembering:</em> the <em>real</em> sphere gives
+    \(\mathrm{Beta}(\tfrac12, \tfrac{2r-1}{2})\) instead; working over \(\mathbb{C}\) is what makes the tail a clean
+    \(\varepsilon^{r-1}\). The exponent \(r-1\) is the honest price of dimension: caps of fixed relative size
+    shrink exponentially in \(r\). Small rank isn't a limitation of the analysis — it's where the geometry wants you.
+    </p>
+</div>
+
+<!-- ================= INTERACTIVE 2 ================= -->
+<div class="interactive-box" id="cap-box">
+    <div class="box-title">🧮 The dart calculator: ε, r, δ — and no n</div>
+    <div class="controls">
+        <label>rank r:</label> <input type="range" id="r-slider" min="2" max="6" step="1" value="2"> <span class="readout" id="r-readout">r = 2</span>
+        <label>accuracy ε:</label> <input type="range" id="eps-slider" min="0.02" max="0.9" step="0.01" value="0.3"> <span class="readout" id="eps-readout">ε = 0.30</span>
+        <label>confidence:</label>
+        <select id="delta-select"><option value="0.1">90%</option><option value="0.01" selected>99%</option><option value="0.001">99.9%</option></select>
+    </div>
+    <div class="svg-wrap"><svg id="cap-svg" width="740" height="290" viewBox="0 0 740 290"></svg></div>
+    <div class="caption">
+        <strong>Left:</strong> the alignment cap on the sphere — the set of darts \((1-\varepsilon)\)-aligned with the
+        Hahn–Banach direction; its exact measure is \(\varepsilon^{r-1}\).
+        <strong>Right:</strong> success probability of best-of-\(S\) sampling, \(1 - (1-\varepsilon^{r-1})^S\); the dashed
+        line marks the theorem's budget \(S = \lceil \log(1/\delta)/\varepsilon^{r-1} \rceil\). Play with the sliders:
+        the budget moves with \(\varepsilon\) and explodes with \(r\) — but no slider for \(n\) exists, because
+        \(n\) does not enter. That is the theorem.
+    </div>
+</div>
+
+<!-- ================= SECTION 4 ================= -->
+<h2>4. Paley–Zygmund: a polynomial-in-\(r\) route</h2>
+
+<p>
+Theorem 2's \(\varepsilon^{r-1}\) is exact but exponential in \(r\). Can the \(r\)-dependence be tamed?
+The paper's third result says yes — polynomially — if you (a) accept a threshold weakened by a factor
+\(1/r\), and (b) let one gentle structural parameter of the instance enter: the
+<span class="tooltip-term" data-tooltip="μ measures how spread-out the top eigenvectors are: μ close to 1 means mass spread evenly over coordinates; large μ means a few coordinates hog the mass.">incoherence</span>
+\(\mu\) of the eigenvectors.
+</p>
+
+<div class="theorem-box">
+    <div class="thm-title">Theorem 3 — the Paley–Zygmund tail (incoherent instances)</div>
+    <p>
+    Let \(K \geq 2\), \(r \geq 2\), under general position and \(\mu\)-incoherence. For any \(\varepsilon \in (0,1)\):
+    \[
+        \Pr\Big[ f(\mathbf{c}) \geq \tfrac{\cos^2(\pi/K)}{r}(1-\varepsilon)\mathrm{OPT}_r \Big]
+        \geq \frac{\varepsilon^2}{1 + V_0},
+        \qquad
+        V_0 \leq \frac{c r^6 \mu^4}{\cos^8(\pi/K)},
+    \]
+    so \(S \geq O\big(\log(1/\delta) \mu^4 r^6 \big/ (\varepsilon^2 \cos^8(\pi/K))\big)\) samples suffice —
+    polynomial in \(r\), and again free of \(n\).
+    </p>
+</div>
+
+<p>
+The engine is an inequality from 1932 that deserves more fame. <strong>Paley–Zygmund</strong> is Chebyshev's
+inequality run in reverse: a non-negative random variable cannot hide all of its mass below a fraction of its mean
+unless its variance is large relative to its squared mean:
+\[
+\Pr\big[ f > (1-\varepsilon)\mathbb{E}f \big] \geq \frac{\varepsilon^2}{1 + \mathrm{Var}(f)/(\mathbb{E}f)^2}.
+\]
+So the whole game becomes: control the <strong>ratio</strong> \(V_0 = \mathrm{Var}(f)/(\mathbb{E}f)^2\).
+And here is the punchline that makes the result \(n\)-free — <em>a cancellation</em>:
+</p>
+
+<div class="insight-box">
+    <div class="insight-title">The variance ratio is scale-free in n</div>
+    <p>
+    Both the mean and the standard deviation of \(f\) grow like \(\Lambda n\)
+    (where \(\Lambda\) is the total eigenvalue mass of \(\mathbf{Q}\)).
+    The numerator and denominator of \(V_0\) each carry the factor \((\Lambda n)^2\) — so it cancels.
+    What remains after the dust settles is only geometry: \(V_0 \lesssim r^6\mu^4/\cos^8(\pi/K)\).
+    The graph's size entered the mean and the fluctuations <em>identically</em>, and the ratio forgot it.
+    </p>
+</div>
+
+<p>
+The two supporting pillars, briefly. The mean is large by the paper's expectation bound —
+\(\mathbb{E}[f] \geq \tfrac{\cos^2(\pi/K)}{r}\mathrm{OPT}_r\) (that is where the \(1/r\) in the threshold comes from:
+rounding wastes a Cauchy–Schwarz factor \(r\) in expectation, which the Beta route of Theorem 2 avoids).
+The variance is small by a covariance count: \(\mathrm{Var}(f) \leq n^2\Lambda^2\).
+And to compare \(\mathbb{E}f\) with \(\mathrm{OPT}_r\) at the same scale, incoherence enters exactly once:
+if the top eigenvector's mass is spread over many coordinates (\(\mu\) small), rounding <em>that eigenvector alone</em>
+already certifies \(\mathrm{OPT}_r \gtrsim \cos^2(\pi/K)\Lambda n / (r^2\mu^2)\) — pinning \(\mathrm{OPT}_r\)
+to the \(\Lambda n\) scale so the cancellation can fire.
+</p>
+
+<div class="figure">
+<svg width="660" height="230" viewBox="0 0 660 230" role="img" aria-label="Incoherence: spiky versus spread eigenvector mass">
+  <text x="160" y="26" font-family="Source Sans Pro" font-size="15" font-weight="700" fill="#DC267F" text-anchor="middle">coherent (spiky): μ large</text>
+  <g>
+    <rect x="60" y="60" width="18" height="110" fill="#DC267F"/>
+    <rect x="84" y="158" width="18" height="12" fill="#f3b7d2"/>
+    <rect x="108" y="162" width="18" height="8" fill="#f3b7d2"/>
+    <rect x="132" y="160" width="18" height="10" fill="#f3b7d2"/>
+    <rect x="156" y="163" width="18" height="7" fill="#f3b7d2"/>
+    <rect x="180" y="159" width="18" height="11" fill="#f3b7d2"/>
+    <rect x="204" y="162" width="18" height="8" fill="#f3b7d2"/>
+    <rect x="228" y="161" width="18" height="9" fill="#f3b7d2"/>
+    <line x1="50" y1="170" x2="260" y2="170" stroke="#888" stroke-width="1.5"/>
+  </g>
+  <text x="160" y="196" font-family="Source Sans Pro" font-size="13" fill="#666" text-anchor="middle">one coordinate hogs the eigenvector —</text>
+  <text x="160" y="214" font-family="Source Sans Pro" font-size="13" fill="#666" text-anchor="middle">rounding it certifies little</text>
+
+  <text x="490" y="26" font-family="Source Sans Pro" font-size="15" font-weight="700" fill="#2a8a5c" text-anchor="middle">incoherent (spread): μ ≈ 1</text>
+  <g>
+    <rect x="390" y="130" width="18" height="40" fill="#59b389"/>
+    <rect x="414" y="124" width="18" height="46" fill="#59b389"/>
+    <rect x="438" y="134" width="18" height="36" fill="#59b389"/>
+    <rect x="462" y="127" width="18" height="43" fill="#59b389"/>
+    <rect x="486" y="131" width="18" height="39" fill="#59b389"/>
+    <rect x="510" y="125" width="18" height="45" fill="#59b389"/>
+    <rect x="534" y="133" width="18" height="37" fill="#59b389"/>
+    <rect x="558" y="129" width="18" height="41" fill="#59b389"/>
+    <line x1="380" y1="170" x2="590" y2="170" stroke="#888" stroke-width="1.5"/>
+  </g>
+  <text x="490" y="196" font-family="Source Sans Pro" font-size="13" fill="#666" text-anchor="middle">mass spread over n coordinates — rounding the</text>
+  <text x="490" y="214" font-family="Source Sans Pro" font-size="13" fill="#666" text-anchor="middle">eigenvector already achieves the Λn scale</text>
+</svg>
+<div class="figcap"><strong>What incoherence buys.</strong> \(\mu\)-incoherence bounds how concentrated the top
+eigenvectors can be. It is the one structural hypothesis of Theorem 3 — and it enters only to certify that
+\(\mathrm{OPT}_r\) lives at the same \(\Lambda n\) scale as \(\mathbb{E}[f]\), so the size of the graph cancels
+in the Paley–Zygmund ratio.</div>
+</div>
+
+<div class="toolbox-grid">
+<div class="toolbox-card">
+    <div class="tb-title">Tool #3 — Paley–Zygmund (anti-concentration for free)</div>
+    <p>
+    A one-line inequality that converts "the mean is big and the variance is controlled" into
+    "a random draw is good with constant probability." No independence structure, no boundedness, no dimension.
+    Whenever you can compute two moments of a complicated random objective, you already have a sampling guarantee.
+    </p>
+</div>
+<div class="toolbox-card">
+    <div class="tb-title">Tool #4 — Incoherence, used honestly</div>
+    <p>
+    The workhorse hypothesis of matrix completion and randomized linear algebra, in a new role: not to make sampling
+    uniformizable, but to pin the combinatorial optimum to the analog scale \(\Lambda n\). Note the discipline: it is
+    the <em>only</em> assumption, it is measurable on any instance (compute the eigenvectors, read off \(\mu\)),
+    and its possible \(n\)-dependence is stated rather than hidden.
+    </p>
+</div>
+</div>
+
+<!-- ================= SECTION 5 ================= -->
+<h2>5. The menu: three guarantees, one algorithm</h2>
+
+<p>
+All three theorems analyze the <em>same</em> loop — draw, round, keep the best. They differ in what they promise
+and what they charge. This is the honest menu:
+</p>
+
+<table>
+<tr><th>Guarantee</th><th>Threshold reached</th><th>Per-dart success</th><th>Darts needed</th><th>Assumptions</th></tr>
+<tr>
+    <td><strong>Thm 1</strong> (rank 1)</td>
+    <td>exact \(\mathrm{OPT}_1\)</td>
+    <td>\(\eta\)</td>
+    <td>\(\log(1/\delta)/\eta\)</td>
+    <td>general position</td>
+</tr>
+<tr>
+    <td><strong>Thm 2</strong> (Beta cap)</td>
+    <td>\(\cos^2(\pi/K)(1-\varepsilon)\mathrm{OPT}_r\)</td>
+    <td>\(\varepsilon^{r-1}\) (exact)</td>
+    <td>\(\log(1/\delta)/\varepsilon^{r-1}\)</td>
+    <td><em>none</em></td>
+</tr>
+<tr>
+    <td><strong>Thm 3</strong> (Paley–Zygmund)</td>
+    <td>\(\tfrac{\cos^2(\pi/K)}{r}(1-\varepsilon)\mathrm{OPT}_r\)</td>
+    <td>\(\varepsilon^2/(1+ c r^6\mu^4/\cos^8(\pi/K))\)</td>
+    <td>\(O\big(\tfrac{\log(1/\delta)\mu^4 r^6}{\varepsilon^2\cos^8(\pi/K)}\big)\)</td>
+    <td>general position + \(\mu\)-incoherence</td>
+</tr>
+</table>
+
+<p>
+Small rank and high accuracy → Theorem 2 (exact exponent, clean threshold, zero assumptions).
+Larger rank on a spread-out instance → Theorem 3 (polynomial in \(r\)).
+Rank one → Theorem 1 hands you the exact optimum outright.
+In every row, the sample count is a function of <em>accuracy, rank, and instance geometry</em> —
+never of \(n\). The enumeration explosion \(O(n^{2r-1})\) has been traded for a fixed dart budget
+plus cheap per-dart linear algebra.
+</p>
+
+<!-- ================= SECTION 6 ================= -->
+<h2>6. Does reality agree?</h2>
+
+<p>
+Theory predicts the dart budget is flat in \(n\). The paper's experiments (Max-3-Cut, \(K=3\), \(r=2\);
+random 5-regular, Erdős–Rényi, and toroidal graphs) sweep \(n\) from \(10^3\) to \(10^6\) and \(S\) up to \(10^6\):
+</p>
+
+<div class="figure">
+    <img src="./assets/img/theory_sampling_n_independence.png" alt="Best-of-S curves across three graph families: curves for n spanning three orders of magnitude overlap and plateau at the same S">
+    <div class="figcap">
+    <strong>The knee does not move.</strong> Best-of-\(S\) value (normalized to the best found at the largest budget)
+    versus \(S\), one curve per graph size — panels: 5-regular, Erdős–Rényi, toroidal. Curves for sizes spanning
+    three orders of magnitude overlap; the budget to reach 99.9% of the plateau is flat at \(S=10\) on toroidal
+    graphs and even <em>decreases</em> with \(n\) on Erdős–Rényi (median from \(\sim 10^5\) at \(n=10^3\)
+    to \(10^4\) at \(n=10^5\)). Exactly the \(n\)-free behavior the tails predict.
+    </div>
+</div>
+
+<div class="figure">
+    <img src="./assets/img/theory_sampling_quality.png" alt="Best-of-S as a fraction of the true rank-r optimum; a single draw already attains 0.87-0.98" style="max-width: 62%;">
+    <div class="figcap">
+    <strong>One dart is already good.</strong> On instances small enough to enumerate exhaustively (\(n \leq 100\)),
+    best-of-\(S\) is measured against the <em>true</em> \(\mathrm{OPT}_r\). A single draw attains, in expectation,
+    0.87–0.98 of \(\mathrm{OPT}_r\) (mean over \(2\times10^5\) draws) — about \(7\times\) the guaranteed floor
+    \(\cos^2(\pi/3)/2 = 0.125\) — and best-of-\(S\) reaches 0.98 / 0.99 / 0.996 at \(S = 10\) / \(10^2\) / \(10^3\).
+    The theory's floor is honest but conservative: it worst-cases the rounding over all coordinates at once, while
+    the sphere's mass concentrates on near-optimal cells.
+    </div>
+</div>
+
+<p>
+One more empirical footnote the theory made possible: the analyzed sampler (uniform on the sphere) was tested
+head-to-head against the sampler our earlier deployed code used (null vectors of random row subsets — see
+<a href="LowRankMaxCut_RandR2.html">Blog&nbsp;3</a>). Same cut quality to within 0.15% up to \(n = 10^6\) —
+but the null-vector draw rejects roughly 40% of its samples as degenerate, while the uniform-sphere draw
+rejects none. The version that is <em>easier to analyze</em> turned out to be the version that is
+<em>cheaper to run</em>. Theory and engineering agreeing on the same design is a good sign you've found the
+right abstraction.
+</p>
+
+<!-- ================= SECTION 7 ================= -->
+<h2>7. What we still don't know</h2>
+
+<ul>
+<li><strong>Close the attenuation gap.</strong> The experiments plateau at essentially the exhaustive optimum;
+the tails guarantee a \(\cos^2(\pi/K)\) (or \(\cos^2(\pi/K)/r\)) fraction of it. Where between the two does the
+truth live? Proving the empirical knee at the <em>unattenuated</em> threshold is the series' standing open problem.</li>
+<li><strong>Delete the \(1/r\) from Theorem 3.</strong> The \(1/r\) enters through the expectation bound's
+worst-case rounding. Any argument that captures the observed concentration of near-optimal cells should remove it.</li>
+<li><strong>Drop incoherence.</strong> We believe a concentration-of-measure route (Lipschitz functions on the
+sphere) can yield an \(\varepsilon^2\)-type tail with <em>no</em> \(\mu\) at all, at the price of an absolute
+constant in the threshold. Stay tuned.</li>
+<li><strong>The lower-rank surprise.</strong> In 3 of 27 small instances, sampling found colorings 2–5%
+<em>better</em> than fixed-rank enumeration — living on lower-rank great-spheres the enumeration skips.
+Sampling explores a slightly larger space than the theory gives it credit for; formalizing that is open.</li>
+</ul>
+
+<!-- ================= SECTION 8 ================= -->
+<h2>8. The toolbox, recapped</h2>
+
+<p>
+If you remember four things from this post, make them the four tools — they are older than this problem
+and will outlive it:
+</p>
+
+<ol>
+<li><strong>Hahn–Banach support functionals</strong> — trade an \(n\)-term convex function for one linear functional, tight where it matters.</li>
+<li><strong>Beta laws on the complex sphere</strong> — alignment with a fixed direction has an exact polynomial cap measure: \(\Pr[X \geq 1-\varepsilon] = \varepsilon^{r-1}\).</li>
+<li><strong>Paley–Zygmund</strong> — two moments of a nonnegative variable = a sampling guarantee. Reverse Chebyshev, criminally underused.</li>
+<li><strong>Incoherence, honestly scoped</strong> — one measurable hypothesis, used once, to pin the combinatorial optimum to the analog scale.</li>
+</ol>
+
+<blockquote>
+The deeper lesson of the series so far: <em>structure pays twice</em>. Low rank first turned an exponential search
+into a polynomial enumeration (Blogs 1–2); now the same structure makes blind random sampling provably sufficient —
+with a dart budget that never heard of \(n\).
+</blockquote>
+
+<!-- ================= FOOTER ================= -->
+<div class="footer">
+    <p>
+        &copy; 2026 OptimaLab and QuanTAS, Rice University.
+        Built with <a href="https://www.mathjax.org">MathJax</a> and hand-rolled SVG.
+        Part of the <a href="https://akyrillidis.github.io/explore-quantum/">QuanTAS</a> project.
+        Results quoted from the group's manuscript on low-rank discrete quadratic maximization (under review) —
+        constants and thresholds appear exactly as proved there.
+    </p>
+    <p>
+        The series: <a href="MaxKCut.html">Overview</a>
+        &bull; <a href="LowRankMaxCut_GPU.html">Blog 1: 15 obsolete GPUs</a>
+        &bull; <a href="LowRankMaxCut_Rank1.html">Blog 2: Rank-1 at a million nodes</a>
+        &bull; <a href="LowRankMaxCut_RandR2.html">Blog 3: Randomized rank-2</a>
+        &bull; <a href="LowRankMaxCut_DSatur.html">Blog 4: Spectral vs. combinatorial</a>
+    </p>
+</div>
+
+</div><!-- .container -->
+
+<!-- ============================================================ -->
+<!-- VANILLA-JS INTERACTIVES                                       -->
+<!-- ============================================================ -->
+<script>
+(function () {
+"use strict";
+var TAU = Math.PI * 2;
+function mod(x, m) { return ((x % m) + m) % m; }
+
+/* ================= INTERACTIVE 1: rank-1 dartboard ================= */
+var K = 3;
+var THETA = [0.25, 0.90, 1.70, 2.60, 3.50, 4.40, 5.50];   // n = 7 phasor angles
+var ROOTS = [0, TAU / 3, 2 * TAU / 3];                     // root-of-unity angles
+var COLS  = ["#648FFF", "#DC267F", "#FFB000"];             // class colors (IBM palette)
+
+function nearestRoot(a) {          // index of root nearest to angle a
+    var best = 0, bv = -2;
+    for (var k = 0; k < K; k++) {
+        var c = Math.cos(a - ROOTS[k]);
+        if (c > bv) { bv = c; best = k; }
+    }
+    return best;
+}
+function fval(phi) {               // f(phi) = |sum_i e^{i(R_{k_i} - theta_i)}|^2   (unit weights)
+    var re = 0, im = 0;
+    for (var i = 0; i < THETA.length; i++) {
+        var a = THETA[i] + phi;
+        var k = nearestRoot(a);
+        var ang = ROOTS[k] - THETA[i];
+        re += Math.cos(ang); im += Math.sin(ang);
+    }
+    return re * re + im * im;
+}
+// cell decomposition: boundaries at phi where theta_i + phi = bisector (pi/K + 2*pi*m/K)
+var BNDS = [];
+for (var i = 0; i < THETA.length; i++)
+    for (var m = 0; m < K; m++)
+        BNDS.push(mod(Math.PI / K + m * TAU / K - THETA[i], TAU));
+BNDS.sort(function (a, b) { return a - b; });
+var CELLS = [];                    // {a, b, f}
+var OPT = 0;
+for (var c = 0; c < BNDS.length; c++) {
+    var a0 = BNDS[c], b0 = (c + 1 < BNDS.length) ? BNDS[c + 1] : BNDS[0] + TAU;
+    var fmid = fval(mod((a0 + b0) / 2, TAU));
+    CELLS.push({ a: a0, b: b0, f: fmid });
+    if (fmid > OPT) OPT = fmid;
+}
+var goldMeasure = 0;
+CELLS.forEach(function (cl) { if (cl.f > OPT - 1e-9) goldMeasure += (cl.b - cl.a); });
+var goldFrac = goldMeasure / TAU;  // = eta (margin at cell centers); also the exact hit probability
+
+// --- SVG scaffolding ---
+var svg = document.getElementById("dartboard-svg");
+var NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    (parent || svg).appendChild(e);
+    return e;
+}
+var CX = 175, CY = 195, R = 148;
+function pt(ang, rad) { return [CX + rad * Math.cos(ang), CY - rad * Math.sin(ang)]; }
+
+// sector wedges + boundaries (static)
+for (var k = 0; k < K; k++) {
+    var a1 = ROOTS[k] - Math.PI / K, a2 = ROOTS[k] + Math.PI / K;
+    var p1 = pt(a1, R), p2 = pt(a2, R);
+    el("path", { d: "M " + CX + " " + CY + " L " + p1[0] + " " + p1[1] +
+                   " A " + R + " " + R + " 0 0 0 " + p2[0] + " " + p2[1] + " Z",
+                 fill: COLS[k], opacity: 0.10 });
+    var rootPt = pt(ROOTS[k], R + 16);
+    el("text", { x: rootPt[0], y: rootPt[1] + 5, "text-anchor": "middle",
+                 "font-family": "Fira Mono", "font-size": "13", fill: COLS[k] }).textContent =
+        (k === 0) ? "1" : (k === 1 ? "ω" : "ω²");
+}
+for (var m = 0; m < K; m++) {
+    var bAng = Math.PI / K + m * TAU / K;
+    var pb = pt(bAng, R);
+    el("line", { x1: CX, y1: CY, x2: pb[0], y2: pb[1], stroke: "#999", "stroke-width": 1.2, "stroke-dasharray": "5,4" });
+}
+el("circle", { cx: CX, cy: CY, r: R, fill: "none", stroke: "#444", "stroke-width": 1.5 });
+el("text", { x: CX, y: 26, "text-anchor": "middle", "font-family": "Source Sans Pro",
+             "font-size": "14", "font-weight": "600", fill: "#444" }).textContent = "the rotating phasors";
+
+// phasor dots (dynamic)
+var dots = THETA.map(function () { return el("circle", { r: 7, stroke: "#333", "stroke-width": 1 }); });
+
+// staircase plot area
+var PX0 = 375, PX1 = 725, PY0 = 55, PY1 = 305;
+function xOf(phi) { return PX0 + (phi / TAU) * (PX1 - PX0); }
+function yOf(v)   { return PY1 - (v / OPT) * (PY1 - PY0 - 14); }
+el("text", { x: (PX0 + PX1) / 2, y: 26, "text-anchor": "middle", "font-family": "Source Sans Pro",
+             "font-size": "14", "font-weight": "600", fill: "#444" }).textContent = "the staircase  f(φ)  — gold = optimal cells";
+// gold cells first (background)
+CELLS.forEach(function (cl) {
+    if (cl.f > OPT - 1e-9) {
+        el("rect", { x: xOf(cl.a), y: PY0, width: xOf(Math.min(cl.b, TAU)) - xOf(cl.a),
+                     height: PY1 - PY0, fill: "#FFB000", opacity: 0.28 });
+        if (cl.b > TAU)
+            el("rect", { x: xOf(0), y: PY0, width: xOf(cl.b - TAU) - xOf(0), height: PY1 - PY0, fill: "#FFB000", opacity: 0.28 });
+    }
+});
+// axes
+el("line", { x1: PX0, y1: PY1, x2: PX1, y2: PY1, stroke: "#444", "stroke-width": 1.2 });
+el("text", { x: PX0, y: PY1 + 18, "font-family": "Fira Mono", "font-size": "11", fill: "#666" }).textContent = "0";
+el("text", { x: PX1 - 14, y: PY1 + 18, "font-family": "Fira Mono", "font-size": "11", fill: "#666" }).textContent = "2π";
+// steps
+CELLS.forEach(function (cl) {
+    var y = yOf(cl.f);
+    el("line", { x1: xOf(cl.a), y1: y, x2: xOf(Math.min(cl.b, TAU)), y2: y, stroke: "#222", "stroke-width": 2 });
+    if (cl.b > TAU) el("line", { x1: xOf(0), y1: y, x2: xOf(cl.b - TAU), y2: y, stroke: "#222", "stroke-width": 2 });
+});
+// darts layer + cursor
+var dartLayer = el("g", {});
+var cursor = el("line", { y1: PY0 - 6, y2: PY1, stroke: "#DC267F", "stroke-width": 2 });
+var needle = el("line", { stroke: "#DC267F", "stroke-width": 2.5 });
+el("circle", { cx: CX, cy: CY, r: 3.5, fill: "#DC267F" });
+
+var phiSlider = document.getElementById("phi-slider");
+var phiOut = document.getElementById("phi-readout");
+var scoreOut = document.getElementById("score-readout");
+var goldOut = document.getElementById("gold-readout");
+var dartOut = document.getElementById("dart-readout");
+goldOut.textContent = "gold fraction = η = " + (goldFrac * 100).toFixed(1) + "%";
+dartOut.textContent = "darts: none yet";
+
+function render() {
+    var phi = parseFloat(phiSlider.value);
+    phiOut.textContent = "φ = " + phi.toFixed(2);
+    for (var i = 0; i < THETA.length; i++) {
+        var a = mod(THETA[i] + phi, TAU);
+        var p = pt(a, R - 22);
+        dots[i].setAttribute("cx", p[0]); dots[i].setAttribute("cy", p[1]);
+        dots[i].setAttribute("fill", COLS[nearestRoot(a)]);
+    }
+    var np = pt(mod(phi, TAU), R - 60);
+    needle.setAttribute("x1", CX); needle.setAttribute("y1", CY);
+    needle.setAttribute("x2", np[0]); needle.setAttribute("y2", np[1]);
+    var x = xOf(mod(phi, TAU));
+    cursor.setAttribute("x1", x); cursor.setAttribute("x2", x);
+    var f = fval(mod(phi, TAU));
+    scoreOut.textContent = "f(φ)/OPT = " + (f / OPT * 100).toFixed(1) + "%" + (f > OPT - 1e-9 ? "  ← optimal!" : "");
+}
+phiSlider.addEventListener("input", render);
+render();
+
+document.getElementById("throw-btn").addEventListener("click", function () {
+    while (dartLayer.firstChild) dartLayer.removeChild(dartLayer.firstChild);
+    var N = 200, hits = 0;
+    for (var t = 0; t < N; t++) {
+        var phi = Math.random() * TAU;
+        var hit = fval(phi) > OPT - 1e-9;
+        if (hit) hits++;
+        el("circle", { cx: xOf(phi), cy: PY0 - 10 - Math.random() * 26, r: 2.4,
+                       fill: hit ? "#FFB000" : "#bbb", opacity: 0.9 }, dartLayer);
+    }
+    dartOut.textContent = "darts: " + hits + "/" + N + " hit gold (" + (hits / N * 100).toFixed(1) +
+                          "%)  vs  η = " + (goldFrac * 100).toFixed(1) + "%";
+});
+document.getElementById("clear-btn").addEventListener("click", function () {
+    while (dartLayer.firstChild) dartLayer.removeChild(dartLayer.firstChild);
+    dartOut.textContent = "darts: none yet";
+});
+
+/* ================= INTERACTIVE 2: cap explorer ================= */
+var svg2 = document.getElementById("cap-svg");
+function el2(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    (parent || svg2).appendChild(e);
+    return e;
+}
+// left: sphere + cap schematic
+var SCX = 130, SCY = 150, SR = 95;
+el2("circle", { cx: SCX, cy: SCY, r: SR, fill: "#f7f9ff", stroke: "#648FFF", "stroke-width": 2 });
+el2("ellipse", { cx: SCX, cy: SCY, rx: SR, ry: SR * 0.28, fill: "none", stroke: "#648FFF", "stroke-width": 1, "stroke-dasharray": "4,4", opacity: 0.6 });
+var capPath = el2("path", { fill: "#FFB000", opacity: 0.55, stroke: "#c98d00", "stroke-width": 1.5 });
+el2("line", { x1: SCX, y1: SCY, x2: SCX, y2: SCY - SR - 14, stroke: "#8a6712", "stroke-width": 2, "marker-end": "url(#arrowU)" });
+var defs = el2("defs", {});
+var mk = el2("marker", { id: "arrowU", markerWidth: 9, markerHeight: 9, refX: 7, refY: 4.5, orient: "auto" }, defs);
+el2("path", { d: "M0,0 L8,4.5 L0,9 Z", fill: "#8a6712" }, mk);
+el2("text", { x: SCX + 10, y: SCY - SR - 8, "font-family": "Source Sans Pro", "font-size": 14, "font-weight": 600, fill: "#8a6712" }).textContent = "u";
+var capLabel = el2("text", { x: SCX, y: SCY + SR + 28, "text-anchor": "middle", "font-family": "Fira Mono", "font-size": 13, fill: "#444" });
+el2("text", { x: SCX, y: 22, "text-anchor": "middle", "font-family": "Source Sans Pro", "font-size": 14, "font-weight": 600, fill: "#444" }).textContent = "the alignment cap";
+
+// right: success curve
+var QX0 = 320, QX1 = 700, QY0 = 45, QY1 = 235;
+el2("line", { x1: QX0, y1: QY1, x2: QX1, y2: QY1, stroke: "#444", "stroke-width": 1.2 });
+el2("line", { x1: QX0, y1: QY0, x2: QX0, y2: QY1, stroke: "#444", "stroke-width": 1.2 });
+el2("text", { x: (QX0 + QX1) / 2, y: 22, "text-anchor": "middle", "font-family": "Source Sans Pro", "font-size": 14, "font-weight": 600, fill: "#444" }).textContent = "P[best of S clears the threshold]";
+el2("text", { x: QX0 - 8, y: QY0 + 8, "text-anchor": "end", "font-family": "Fira Mono", "font-size": 11, fill: "#666" }).textContent = "1";
+el2("text", { x: QX0 - 8, y: QY1, "text-anchor": "end", "font-family": "Fira Mono", "font-size": 11, fill: "#666" }).textContent = "0";
+el2("text", { x: (QX0 + QX1) / 2, y: QY1 + 26, "text-anchor": "middle", "font-family": "Source Sans Pro", "font-size": 12, fill: "#666" }).textContent = "number of darts S (log scale)";
+var curve = el2("path", { fill: "none", stroke: "#648FFF", "stroke-width": 2.5 });
+var sLine = el2("line", { stroke: "#DC267F", "stroke-width": 2, "stroke-dasharray": "6,4" });
+var sText = el2("text", { "font-family": "Fira Mono", "font-size": 12.5, fill: "#DC267F", "font-weight": 500 });
+var pText = el2("text", { x: QX0 + 6, y: QY1 + 44, "font-family": "Fira Mono", "font-size": 13, fill: "#444" });
+
+var rS = document.getElementById("r-slider"), eS = document.getElementById("eps-slider"), dS = document.getElementById("delta-select");
+var rOut = document.getElementById("r-readout"), eOut = document.getElementById("eps-readout");
+
+function fmtS(S) { return S >= 1e6 ? S.toExponential(1).replace("e+", "×10^") : S.toLocaleString("en-US"); }
+function render2() {
+    var r = parseInt(rS.value), eps = parseFloat(eS.value), del = parseFloat(dS.value);
+    rOut.textContent = "r = " + r;
+    eOut.textContent = "ε = " + eps.toFixed(2);
+    var p = Math.pow(eps, r - 1);
+    var S = Math.ceil(Math.log(1 / del) / p);
+    // cap schematic: half-angle gamma with cos^2 = 1-eps
+    var g = Math.acos(Math.sqrt(Math.max(0, 1 - eps)));
+    var x1 = SCX - SR * Math.sin(g), y1 = SCY - SR * Math.cos(g);
+    var x2 = SCX + SR * Math.sin(g);
+    capPath.setAttribute("d", "M " + x1 + " " + y1 + " A " + SR + " " + SR + " 0 0 1 " + x2 + " " + y1 +
+                              " A " + (SR * Math.sin(g)) + " " + (SR * Math.sin(g) * 0.3) + " 0 0 1 " + x1 + " " + y1 + " Z");
+    capLabel.textContent = "measure = ε^(r−1) = " + (p < 1e-4 ? p.toExponential(2) : p.toFixed(4));
+    // success curve on log-x, s in [1, Smax]
+    var Smax = Math.max(S * 2.2, 12);
+    var d = "";
+    for (var t = 0; t <= 260; t++) {
+        var s = Math.exp(Math.log(1) + (t / 260) * Math.log(Smax));
+        var succ = 1 - Math.pow(1 - p, s);
+        var x = QX0 + (Math.log(s) / Math.log(Smax)) * (QX1 - QX0);
+        var y = QY1 - succ * (QY1 - QY0);
+        d += (t === 0 ? "M " : " L ") + x.toFixed(1) + " " + y.toFixed(1);
+    }
+    curve.setAttribute("d", d);
+    var xS = QX0 + (Math.log(S) / Math.log(Smax)) * (QX1 - QX0);
+    sLine.setAttribute("x1", xS); sLine.setAttribute("x2", xS);
+    sLine.setAttribute("y1", QY0); sLine.setAttribute("y2", QY1);
+    sText.setAttribute("x", Math.min(xS + 6, QX1 - 150)); sText.setAttribute("y", QY0 + 16);
+    sText.textContent = "S = " + fmtS(S);
+    pText.textContent = "per-dart: p = ε^(r−1) = " + (p < 1e-4 ? p.toExponential(2) : p.toFixed(4)) +
+                        "    budget: S = log(1/δ)/p = " + fmtS(S) + "    (n: not involved)";
+}
+rS.addEventListener("input", render2);
+eS.addEventListener("input", render2);
+dS.addEventListener("change", render2);
+render2();
+})();
+</script>
+</body>
+</html>

@@ -144,6 +144,13 @@ layout: default
           <span class="meta">A DSatur + spectral ensemble that beats SA on 11 of 13 graph families.</span>
         </span>
       </li>
+      <li>
+        <span class="icon">🎯</span>
+        <span class="title">
+          <a href="./LowRankMaxCut_Theory.html">How Many Darts to Hit a Maximum? The Theory of Randomized Rounding</a>
+          <span class="meta">The sample-complexity theory behind the series: a rounding margin, Beta-distributed caps, and Paley&ndash;Zygmund &mdash; with a dart budget independent of n.</span>
+        </span>
+      </li>
     </ul>
   </li>
 
