@@ -11,7 +11,7 @@ compilers, and quantum materials and sensing. In reverse chronological order.
 
 #### 2026
 
-+ **Identity-Paired Progressive Depth Training: When Trainability Persists Beyond Expressibility.** *Athanasios Hadjidimoulas, Tirthak Patel, Anastasios Kyrillidis.* Preprint, 2026. [[report]](https://akyrillidis.github.io/pubs/Preprints/IP-PDT.pdf) &middot; [[code]](https://github.com/tanihad/PDT-VQE)
++ **Identity-Paired Progressive Depth Training: When Trainability Persists Beyond Expressibility.** *Athanasios Hadjidimoulas, Tirthak Patel, Anastasios Kyrillidis.* Preprint, 2026. arXiv &mdash; coming soon &middot; [[code]](https://github.com/tanihad/PDT-VQE)
 + **A Catalyst Framework for the Quantum Linear System Problem via the Proximal Point Algorithm.** *Junhyung Lyle Kim, Nai-Hui Chia, Anastasios Kyrillidis.* AAAI Conference on Artificial Intelligence (AAAI), 2026 (oral). [[arXiv]](https://arxiv.org/abs/2406.13879) &middot; [[DOI]](https://doi.org/10.1609/aaai.v40i27.39418)
 + **Three Birds with One Stone: Improving Performance, Convergence, and System Throughput with NEST.** *Yuqian Huo, David A. Quiroga, Anastasios Kyrillidis, Tirthak Patel.* ACM SIGMETRICS, 2026. [[DOI]](https://doi.org/10.1145/3771580)
 + **QS3: Designing and Implementing an Interactive and Student-Centered Quantum Research Summit.** *Nicholas S. DiBrita, Yuqian Huo, David Román-García, Nai-Hui Chia, Anastasios Kyrillidis, Tracy Volz, Tirthak Patel.* IEEE International Conference on Quantum Computing and Engineering (QCE), 2026.

@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Trainability Beyond Expressibility — Identity-Paired Progressive Depth Training</title>
+<meta name="description" content="Identity-Paired Progressive Depth Training (IP-PDT) grows variational quantum circuits by appending layer-pairs that cancel to the identity: no initialization shock, deep-circuit energies at roughly 5x fewer two-qubit gates, and a proof that expressibility saturates while trainability keeps climbing." />
+
+<!-- Open Graph / Twitter -->
+<meta property="og:type" content="article" />
+<meta property="og:title" content="A Quantum Circuit That Keeps Improving After It Runs Out of Power" />
+<meta property="og:description" content="Identity-Paired Progressive Depth Training reaches deep-circuit energies with about 5x fewer two-qubit gates — and uncovers a genuine surprise about trainability versus expressibility." />
+<meta property="og:image" content="https://akyrillidis.github.io/explore-quantum/assets/img/ippdt_shock.png" />
+<meta property="og:url" content="https://akyrillidis.github.io/explore-quantum/IP-PDT.html" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="A Quantum Circuit That Keeps Improving After It Runs Out of Power" />
+<meta name="twitter:description" content="IP-PDT: deep-circuit energies at ~5x fewer CNOTs, a monotone energy guarantee, and trainability beyond expressibility. A preprint from Rice University." />
+<meta name="twitter:image" content="https://akyrillidis.github.io/explore-quantum/assets/img/ippdt_shock.png" />
+<meta name="keywords" content="VQE, variational quantum eigensolver, barren plateaus, hardware-efficient ansatz, progressive depth, identity block, quantum optimization, near-term quantum computing" />
+
+<!-- Fonts: series template (Source Serif Pro body + Source Sans Pro labels + Fira Mono) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Source+Sans+Pro:wght@400;600;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- MathJax v3 (series template) -->
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+<style>
+/* ===== RESET & TOKENS ===== */
+*, *::before, *::after { box-sizing:border-box; }
+:root{
+  /* series accent (matched to the sibling: LowRankMaxCut_Theory) */
+  --accent:#648FFF; --accent-2:#785EF0; --accent-ink:#2a5bd7;
+  --magenta:#DC267F; --gold:#FFB000;
+  /* concept palette (kept): teal = entangling/CNOTs, amber = rotations, coral = energy */
+  --teal:#2d8f8a; --teal-tint:#e7f2f0;
+  --amber:#d4a03f; --amber-tint:#f8efd7;
+  --coral:#e6725b; --coral-tint:#fbe8e2; --coral-ink:#c2543f;
+  /* neutrals + back-compat aliases */
+  --rule:#e0e0e0; --paper:#fff; --ink:#222; --muted:#666; --link:#648FFF;
+}
+html{ -webkit-text-size-adjust:100%; }
+body{
+  font-family:'Source Serif Pro', Georgia, serif;
+  font-size:17px; line-height:1.7; color:#222; background:#fff;
+  margin:0; padding:0;
+}
+.container{ max-width:912px; margin:0 auto; padding:0 24px 70px; }
+@media screen and (max-width:1000px){
+  .container{ max-width:95%; padding:0 12px 60px; }
+  body{ font-size:15px; }
+}
+
+/* ===== TYPOGRAPHY ===== */
+h1,h2,h3,h4{ font-family:'Source Sans Pro', Helvetica, Arial, sans-serif; font-weight:700; color:#1a1a1a; line-height:1.3; }
+h1{ font-size:2.2em; margin:0 0 0.3em; }
+h2{ font-size:1.55em; margin:0 0 0.6em; border-bottom:2px solid var(--accent); padding-bottom:6px; }
+h3{ font-size:1.2em; margin:1.6em 0 0.4em; color:#333; }
+p{ margin:1em 0; }
+em{ font-style:italic; }
+strong{ font-weight:600; }
+a{ color:var(--accent); text-decoration:none; }
+a:hover{ color:var(--accent-2); text-decoration:underline; }
+code,.mono{ font-family:'Fira Mono', monospace; font-size:0.85em; background:#f4f4f8; padding:2px 6px; border-radius:3px; border:1px solid #e0e0e0; }
+
+/* ===== MASTHEAD (kept) ===== */
+.masthead{
+  max-width:912px; margin:0 auto; padding:20px 24px 14px;
+  font-family:'Source Sans Pro', sans-serif; font-size:12.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:#666; border-bottom:1px solid #ececec;
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.masthead a{ color:#666; text-decoration:none; }
+.masthead a:hover{ color:var(--accent); }
+.masthead .dot{ opacity:.5; }
+
+/* ===== HERO (series template) ===== */
+.hero{ text-align:center; padding:52px 0 26px; }
+.hero h1{ font-size:2.4em; margin-bottom:0.3em; color:#1a1a1a; line-height:1.14; }
+.hero .subtitle{ font-family:'Source Sans Pro', sans-serif; font-size:1.12em; color:#4a4a4a; font-weight:400; font-style:italic; line-height:1.5; margin:0 auto 1.2em; max-width:47em; }
+.hero .authors{ font-family:'Source Sans Pro', sans-serif; font-size:1.0em; color:#333; margin-bottom:0.3em; }
+.hero .affiliation{ font-family:'Source Sans Pro', sans-serif; font-size:0.9em; color:#666; margin-bottom:0.6em; }
+.hero .date{ font-family:'Source Sans Pro', sans-serif; font-size:0.9em; color:#888; margin-bottom:1em; }
+.hero .links a, .hero .links .chip-muted{
+  display:inline-block; margin:4px 6px; padding:8px 18px; border-radius:20px;
+  font-family:'Source Sans Pro', sans-serif; font-size:0.9em; font-weight:600;
+}
+.hero .links a{ background:var(--accent); color:#fff; }
+.hero .links a:hover{ background:var(--accent-2); text-decoration:none; }
+.hero .links .chip-muted{ background:#eceef5; color:#555; cursor:default; }
+
+/* ===== INSIGHT BOXES (series) ===== */
+.insight-box{ background:#f0f6ff; border:1px solid #bcd2ff; border-left:5px solid var(--accent); border-radius:6px; padding:16px 20px; margin:1.6em 0; }
+.insight-box .insight-title{ font-family:'Source Sans Pro', sans-serif; font-weight:700; color:var(--accent-ink); margin-bottom:6px; }
+.insight-box p{ margin:0.5em 0; }
+
+/* ===== THEOREM BOXES (series) ===== */
+.theorem-box{ background:#f7f5ff; border:1px solid #d4c9f5; border-left:5px solid var(--accent-2); border-radius:6px; padding:16px 20px; margin:1.6em 0; }
+.theorem-box .thm-title{ font-family:'Source Sans Pro', sans-serif; font-weight:700; color:#4c3a9e; margin-bottom:6px; font-size:0.95em; text-transform:uppercase; letter-spacing:0.04em; }
+.theorem-box p{ margin:0.5em 0; }
+
+/* ===== TOOLBOX CARDS (series) ===== */
+.toolbox-card{ background:#fffdf5; border:1px solid #ecdfa8; border-left:5px solid var(--gold); border-radius:6px; padding:14px 18px; margin:1.6em 0; }
+.toolbox-card .tb-title{ font-family:'Source Sans Pro', sans-serif; font-weight:700; color:#8a6712; margin-bottom:4px; }
+.toolbox-card .tb-title::before{ content:"🧰 "; }
+.toolbox-card p{ margin:0.4em 0; font-size:0.95em; }
+
+/* ===== INTERACTIVE BOXES (series) ===== */
+.interactive-box{ background:#fcfcfe; border:2px solid var(--accent); border-radius:10px; padding:18px; margin:2em 0; }
+.interactive-box .box-title{ font-family:'Source Sans Pro', sans-serif; font-weight:700; font-size:1.05em; color:var(--accent-ink); margin-bottom:10px; }
+.interactive-box .caption{ font-size:0.88em; color:#666; margin-top:10px; line-height:1.5; }
+.interactive-box .controls{ font-family:'Source Sans Pro', sans-serif; font-size:0.9em; margin:10px 0; display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:center; }
+.interactive-box .controls label{ font-weight:600; color:#444; }
+.interactive-box input[type=range]{ vertical-align:middle; width:200px; max-width:60vw; }
+.interactive-box button{ font-family:'Source Sans Pro', sans-serif; font-weight:700; font-size:1.0em; background:var(--accent); color:#fff; border:none; border-radius:16px; padding:2px 13px; cursor:pointer; line-height:1.3; }
+.interactive-box button:hover{ background:var(--accent-2); }
+.interactive-box button.secondary{ background:#eceef5; color:#444; }
+.interactive-box .readout{ font-family:'Fira Mono', monospace; font-size:0.85em; background:#f4f4f8; border:1px solid #e0e0e0; border-radius:4px; padding:3px 8px; }
+.svg-wrap{ text-align:center; overflow-x:auto; }
+.svg-wrap svg{ max-width:100%; height:auto; }
+
+/* ===== SECTIONS ===== */
+section{ margin-top:3em; }
+.kicker2{
+  font-family:'Source Sans Pro', sans-serif; font-size:12.5px; font-weight:700;
+  letter-spacing:.14em; text-transform:uppercase; color:#8a8a8a; margin:0 0 6px;
+}
+.kicker2 b{ color:var(--accent); font-weight:700; }
+
+/* ===== PALETTE LEGEND (concept colors) ===== */
+.legend{
+  display:flex; gap:22px; flex-wrap:wrap; align-items:center;
+  font-family:'Source Sans Pro', sans-serif; font-size:13.5px; color:#666;
+  margin:24px 0; padding:12px 0; border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+}
+.legend .sw{ display:inline-block; width:14px; height:14px; border-radius:3px; vertical-align:-2px; margin-right:8px; }
+.legend .sw.teal{ background:var(--teal); }
+.legend .sw.amber{ background:var(--amber); }
+.legend .sw.coral{ background:var(--coral); }
+
+/* ===== FIGURES ===== */
+figure{ margin:2em auto; max-width:860px; }
+figure img{ display:block; width:100%; height:auto; border-radius:6px; }
+.figframe img{ border:1px solid var(--rule); background:#fff; padding:10px; }
+figcaption{ font-size:0.9em; line-height:1.55; color:#666; margin-top:12px; }
+figcaption b{ color:#333; font-weight:700; }
+.svgwrap{ background:#fff; border:1px solid var(--rule); border-radius:8px; padding:8px 6px; }
+.svgwrap svg{ display:block; width:100%; height:auto; }
+
+/* ===== EQUATIONS ===== */
+.eq{ margin:1.4em 0; text-align:center; overflow-x:auto; }
+
+/* ===== LEDGER (regime of validity — concept good/stop) ===== */
+.ledger{ display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:1.8em 0; }
+.ledger .col{ padding:16px 20px; border-radius:6px; border:1px solid var(--rule); background:#fff; }
+.ledger .col.good{ border-top:3px solid var(--teal); }
+.ledger .col.stop{ border-top:3px solid var(--coral); }
+.ledger h4{ font-family:'Source Sans Pro', sans-serif; font-size:12.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; margin:0 0 10px; }
+.ledger .good h4{ color:var(--teal); }
+.ledger .stop h4{ color:var(--coral-ink); }
+.ledger ul{ margin:0; padding-left:18px; }
+.ledger li{ font-size:0.95em; line-height:1.5; margin-bottom:8px; }
+
+/* ===== TABLE ===== */
+.tablewrap{ overflow-x:auto; margin:1.8em 0; }
+table.ham{ border-collapse:collapse; width:100%; font-family:'Source Sans Pro', sans-serif; font-size:14.5px; }
+table.ham th, table.ham td{ text-align:left; padding:9px 12px; border-bottom:1px solid var(--rule); }
+table.ham thead th{ font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:#666; font-weight:700; border-bottom:2px solid var(--accent); background:#f8f9ff; }
+table.ham td.win{ color:var(--teal); font-weight:700; }
+table.ham td.loss{ color:var(--coral-ink); font-weight:700; }
+table.ham .note{ color:#888; }
+
+/* ===== FOOTER (series) ===== */
+.footer{ border-top:2px solid var(--accent); margin-top:3em; padding:1.5em 0 2.5em; font-size:0.88em; color:#666; }
+.footer a{ color:#666; }
+.footer a:hover{ color:var(--accent); }
+.footer .flinks{ display:flex; gap:18px; flex-wrap:wrap; margin-bottom:14px; }
+.footer pre{ background:#f7f7fb; border:1px solid var(--rule); border-radius:6px; padding:14px 16px; overflow-x:auto; font-size:12.5px; line-height:1.5; color:#444; font-family:'Fira Mono', monospace; }
+.footer .disc{ margin-top:12px; }
+
+@media (max-width:640px){
+  .hero h1{ font-size:1.9em; }
+  .ledger{ grid-template-columns:1fr; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="masthead">
+  <a href="./blogposts.html">QuanTAS</a>
+  <span class="dot">&middot;</span>
+  <a href="https://akyrillidis.github.io/group/">OptimaLab, Rice University</a>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>A quantum circuit that keeps improving after it runs out of power</h1>
+    <div class="subtitle">Deeper quantum circuits should be more capable &mdash; yet they become nearly impossible to train. A method called Identity-Paired Progressive Depth Training grows them a gentler way: every new stage starts out doing nothing at all. The payoff is a deep circuit's accuracy at roughly five times fewer of the expensive gates &mdash; and a real surprise about the gap between what a circuit <em>can</em> represent and what it can <em>learn</em>.</div>
+    <div class="authors">Athanasios Hadjidimoulas, Tirthak Patel, Anastasios Kyrillidis &mdash; <a href="https://akyrillidis.github.io/group/" style="color:inherit">OptimaLab</a></div>
+    <div class="affiliation">Department of Computer Science, Rice University</div>
+    <div class="affiliation">QuanTAS Research Cluster, Ken Kennedy Institute</div>
+    <div class="date">July 2026</div>
+    <div class="links">
+      <a href="https://github.com/tanihad/PDT-VQE">Code</a>
+      <span class="chip-muted">arXiv &mdash; coming soon</span>
+    </div>
+  </div>
+
+  <div class="insight-box">
+    <div class="insight-title">In brief</div>
+    <p>IP-PDT grows a variational quantum circuit by appending layer-pairs that cancel to the identity, so each expansion begins exactly where the last one left off; the set of states the circuit can reach provably saturates after the first expansion, yet training keeps improving, and the circuit reaches deep-circuit energies with about five times fewer two-qubit gates &mdash; inside a regime the paper maps out precisely.</p>
+  </div>
+
+  <!-- 1 ------------------------------------------------------------------- -->
+  <section>
+    <div class="kicker2"><b>01</b> &middot; The puzzle</div>
+    <h2>Deeper should be better. It isn't.</h2>
+    <p>Here is a fact about quantum computers that sounds like a contradiction. If you want a quantum circuit to solve a harder problem, you make it deeper &mdash; more layers, more gates, more expressive power. And yet, past a certain point, making the circuit deeper makes it impossible to <em>use</em>. The knobs are all there. The optimizer just can't find their settings. The gradients it follows shrink toward zero, the loss landscape flattens into a featureless plain, and training stalls. Physicists call these <em>barren plateaus</em>, and they are the central nuisance of near-term quantum computing.</p>
+    <p>So you're caught between two failures. Too shallow, and your circuit can't represent the answer. Too deep, and you can't train it to. IP-PDT &mdash; Identity-Paired Progressive Depth Training &mdash; is a way to thread that needle for one important task: finding the lowest-energy state of a quantum system, the job at the heart of the <a href="https://en.wikipedia.org/wiki/Variational_quantum_eigensolver">variational quantum eigensolver</a> (VQE).</p>
+  </section>
+
+  <!-- 2 ------------------------------------------------------------------- -->
+  <section>
+    <div class="kicker2"><b>02</b> &middot; The obstacle</div>
+    <h2>Why depth is a trap: the gates you can't turn off</h2>
+    <p>To see why depth backfires here, look at how these circuits are built. A <em>hardware-efficient ansatz</em> alternates two kinds of layers. First, single-qubit rotations: cheap, and freely adjustable &mdash; dials you can turn to any angle. Then entangling layers, made of two-qubit CNOT gates, which stitch the qubits together. The rotations are dials. The CNOTs are not: a CNOT is either present or absent, and once it's present it commits the circuit to a fixed pattern of entanglement.</p>
+    <p>That asymmetry is the whole problem. Grow the circuit by bolting on another entangling layer and you've permanently added correlations you can't dial back to zero. If the fresh layer's rotations start at random angles, the state lurches somewhere new, and its energy &mdash; which you had painstakingly driven downhill &mdash; snaps right back up. That jolt is what we mean by <em>initialization shock</em>.</p>
+
+    <figure class="figframe">
+      <img src="./assets/img/ippdt_shock.png" alt="Three energy-versus-step panels for TFIM, Tilted Ising, and Random Ising. A dotted curve spikes sharply upward at every expansion point; the IP-PDT curve and a copy-initialized curve stay flat.">
+      <figcaption><b>Initialization shock, and how to dodge it.</b> Energy versus training step on three spin Hamiltonians; the vertical dotted lines mark the moments the circuit is made deeper. A circuit regrown the naive way with fresh random layers (the dotted curve) detonates at every expansion, throwing away the progress it had made. The IP-PDT curve (red) never flinches. Look closely and you'll notice the dashed curve doesn't flinch much either: a circuit that grows by <em>copying</em> its previous solution into the new layers already avoids most of the spike.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 3 ------------------------------------------------------------------- -->
+  <section>
+    <div class="kicker2"><b>03</b> &middot; The idea</div>
+    <h2>Add depth that starts out doing nothing</h2>
+    <p>IP-PDT's move is to append depth that begins as the identity. Instead of adding a single raw entangling layer, it adds a matched <em>pair</em>: a forward block &mdash; some rotations, then a CNOT ring &mdash; immediately followed by its exact undo &mdash; the same CNOT ring reversed, then the inverse rotations. Run one straight into the other and they annihilate. The reversed ring cancels the forward ring; the inverse rotations cancel the rotations. At the instant it is born, the appended pair <em>is</em> the identity. It changes nothing.</p>
+    <p>But, those rotation angles are still free parameters. The optimizer can wake them one gentle nudge at a time, starting from a point where the energy is exactly what it was before. No shock &mdash; by construction, not by luck.</p>
+    <p>And there's a structural bonus hidden in the cancellation. When two CNOT rings meet and annihilate, they don't merely start as identity; they <em>stay</em> collapsed. Stack as many pairs as you like and the entangling gates keep cancelling in twos, so the whole tower reduces to a single entangling layer wrapped in more and more single-qubit rotations. That is where the savings live: you get a deep circuit's parameter count at a shallow circuit's two-qubit gate count.</p>
+
+    <div class="legend" aria-hidden="true">
+      <span><span class="sw teal"></span>Entangling layer (CNOTs)</span>
+      <span><span class="sw amber"></span>Single-qubit rotations</span>
+      <span><span class="sw coral"></span>Energy / cancellation</span>
+    </div>
+
+    <figure>
+      <div class="svgwrap">
+      <svg viewBox="0 0 860 512" role="img" aria-labelledby="ip-title ip-desc" xmlns="http://www.w3.org/2000/svg">
+        <title id="ip-title">The identity-pairing mechanism</title>
+        <desc id="ip-desc">On four qubit wires: a forward rotation column then a forward CNOT ring, immediately followed by the reverse CNOT ring (its mirror image) then an inverse rotation column. The two adjacent rings annihilate pairwise because each CNOT is self-inverse, so the appended pair reduces to the identity, leaving one entangling ring wrapped in single-qubit rotations.</desc>
+
+        <!-- legend -->
+        <g font-family="Source Sans Pro, sans-serif" font-size="12.5">
+          <rect x="612" y="40" width="15" height="15" rx="3" fill="#2d8f8a"></rect>
+          <text x="636" y="52" fill="#21201c">Entangling layer (CNOTs)</text>
+          <rect x="612" y="66" width="15" height="15" rx="3" fill="#d4a03f"></rect>
+          <text x="636" y="78" fill="#21201c">Single-qubit rotations</text>
+          <rect x="612" y="92" width="15" height="15" rx="3" fill="#e6725b"></rect>
+          <text x="636" y="104" fill="#21201c">Energy &#183; cancellation</text>
+        </g>
+
+        <!-- ===== Scene A: the matched pair and its pairwise cancellation ===== -->
+        <text x="42" y="40" font-family="Source Sans Pro, sans-serif" font-size="13" font-weight="600" letter-spacing="1.2" fill="#6f6b62">TO GO DEEPER, APPEND A MATCHED PAIR</text>
+        <text x="170" y="62" text-anchor="middle" font-family="Source Sans Pro, sans-serif" font-size="12" fill="#8a8578">forward block</text>
+        <text x="354" y="62" text-anchor="middle" font-family="Source Sans Pro, sans-serif" font-size="12" fill="#8a8578">undo block</text>
+
+        <!-- qubit wires (n = 4) -->
+        <g stroke="#8d887c" stroke-width="1.3">
+          <line x1="62" y1="104" x2="438" y2="104"></line>
+          <line x1="62" y1="134" x2="438" y2="134"></line>
+          <line x1="62" y1="164" x2="438" y2="164"></line>
+          <line x1="62" y1="194" x2="438" y2="194"></line>
+        </g>
+        <g font-family="Fira Mono, monospace" font-size="10.5" fill="#9a958a" text-anchor="end">
+          <text x="58" y="108">q1</text><text x="58" y="138">q2</text><text x="58" y="168">q3</text><text x="58" y="198">q4</text>
+        </g>
+
+        <!-- forward rotation column (amber) cx=92 -->
+        <g>
+          <rect x="77" y="92" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <rect x="77" y="122" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <rect x="77" y="152" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <rect x="77" y="182" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <g font-family="Source Sans Pro, sans-serif" font-size="13" font-weight="600" fill="#9a6f1e" text-anchor="middle">
+            <text x="92" y="108">R</text><text x="92" y="138">R</text><text x="92" y="168">R</text><text x="92" y="198">R</text>
+          </g>
+        </g>
+
+        <!-- teal group boxes behind the two rings -->
+        <rect x="127" y="94" width="120" height="120" rx="9" fill="#e7f2f0" stroke="#2d8f8a" stroke-width="1.5"></rect>
+        <rect x="277" y="94" width="120" height="120" rx="9" fill="#e7f2f0" stroke="#2d8f8a" stroke-width="1.5"></rect>
+
+        <!-- forward CNOT ring: CNOT 1->2, 2->3, 3->4, 4->1 (wrap) -->
+        <g stroke="#2d8f8a" stroke-width="1.7" fill="none">
+          <line x1="142" y1="104" x2="142" y2="134"></line>
+          <circle cx="142" cy="104" r="4.4" fill="#2d8f8a"></circle>
+          <circle cx="142" cy="134" r="8" fill="#ffffff"></circle>
+          <line x1="134" y1="134" x2="150" y2="134"></line><line x1="142" y1="126" x2="142" y2="142"></line>
+          <line x1="172" y1="134" x2="172" y2="164"></line>
+          <circle cx="172" cy="134" r="4.4" fill="#2d8f8a"></circle>
+          <circle cx="172" cy="164" r="8" fill="#ffffff"></circle>
+          <line x1="164" y1="164" x2="180" y2="164"></line><line x1="172" y1="156" x2="172" y2="172"></line>
+          <line x1="202" y1="164" x2="202" y2="194"></line>
+          <circle cx="202" cy="164" r="4.4" fill="#2d8f8a"></circle>
+          <circle cx="202" cy="194" r="8" fill="#ffffff"></circle>
+          <line x1="194" y1="194" x2="210" y2="194"></line><line x1="202" y1="186" x2="202" y2="202"></line>
+          <line x1="232" y1="104" x2="232" y2="194"></line>
+          <circle cx="232" cy="194" r="4.4" fill="#2d8f8a"></circle>
+          <circle cx="232" cy="104" r="8" fill="#ffffff"></circle>
+          <line x1="224" y1="104" x2="240" y2="104"></line><line x1="232" y1="96" x2="232" y2="112"></line>
+        </g>
+
+        <!-- reverse CNOT ring (mirror image): CNOT 4->1 (wrap), 3->4, 2->3, 1->2 -->
+        <g stroke="#2d8f8a" stroke-width="1.7" fill="none">
+          <line x1="292" y1="104" x2="292" y2="194"></line>
+          <circle cx="292" cy="194" r="4.4" fill="#2d8f8a"></circle>
+          <circle cx="292" cy="104" r="8" fill="#ffffff"></circle>
+          <line x1="284" y1="104" x2="300" y2="104"></line><line x1="292" y1="96" x2="292" y2="112"></line>
+          <line x1="322" y1="164" x2="322" y2="194"></line>
+          <circle cx="322" cy="164" r="4.4" fill="#2d8f8a"></circle>
+          <circle cx="322" cy="194" r="8" fill="#ffffff"></circle>
+          <line x1="314" y1="194" x2="330" y2="194"></line><line x1="322" y1="186" x2="322" y2="202"></line>
+          <line x1="352" y1="134" x2="352" y2="164"></line>
+          <circle cx="352" cy="134" r="4.4" fill="#2d8f8a"></circle>
+          <circle cx="352" cy="164" r="8" fill="#ffffff"></circle>
+          <line x1="344" y1="164" x2="360" y2="164"></line><line x1="352" y1="156" x2="352" y2="172"></line>
+          <line x1="382" y1="104" x2="382" y2="134"></line>
+          <circle cx="382" cy="104" r="4.4" fill="#2d8f8a"></circle>
+          <circle cx="382" cy="134" r="8" fill="#ffffff"></circle>
+          <line x1="374" y1="134" x2="390" y2="134"></line><line x1="382" y1="126" x2="382" y2="142"></line>
+        </g>
+
+        <!-- inverse rotation column (amber) cx=418 -->
+        <g>
+          <rect x="403" y="92" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <rect x="403" y="122" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <rect x="403" y="152" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <rect x="403" y="182" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <g font-family="Source Sans Pro, sans-serif" font-size="13" font-weight="600" fill="#9a6f1e" text-anchor="middle">
+            <text x="418" y="108">R<tspan font-size="10" dy="-5">&#8224;</tspan></text>
+            <text x="418" y="138">R<tspan font-size="10" dy="-5">&#8224;</tspan></text>
+            <text x="418" y="168">R<tspan font-size="10" dy="-5">&#8224;</tspan></text>
+            <text x="418" y="198">R<tspan font-size="10" dy="-5">&#8224;</tspan></text>
+          </g>
+        </g>
+
+        <!-- ring labels -->
+        <text x="187" y="232" text-anchor="middle" font-family="Source Sans Pro, sans-serif" font-size="11.5" fill="#2d8f8a">forward CNOT ring</text>
+        <text x="337" y="232" text-anchor="middle" font-family="Source Sans Pro, sans-serif" font-size="11.5" fill="#2d8f8a">reverse ring (mirror image)</text>
+
+        <!-- coral: nested arcs pairing each forward CNOT with its mirror twin -->
+        <g stroke="#e6725b" stroke-width="1.3" fill="none" opacity="0.9">
+          <path d="M232,90 Q262,78 292,90"></path>
+          <path d="M202,90 Q262,68 322,90"></path>
+          <path d="M172,90 Q262,58 352,90"></path>
+          <path d="M142,90 Q262,48 382,90"></path>
+        </g>
+
+        <!-- coral: dashed enclosure around both rings + seam where they meet -->
+        <rect x="121" y="88" width="282" height="132" rx="11" fill="none" stroke="#e6725b" stroke-width="1.6" stroke-dasharray="6 4"></rect>
+        <line x1="262" y1="94" x2="262" y2="214" stroke="#e6725b" stroke-width="1" stroke-dasharray="3 4"></line>
+        <text x="262" y="252" text-anchor="middle" font-family="Source Sans Pro, sans-serif" font-size="12.5" fill="#c2543f">these two rings cancel &#8594; <tspan font-style="italic">I</tspan>   (each CNOT meets its twin: CNOT&#178; = <tspan font-style="italic">I</tspan>)</text>
+
+        <!-- reduce arrow -->
+        <g stroke="#e6725b" stroke-width="2" fill="#e6725b">
+          <line x1="262" y1="262" x2="262" y2="292"></line>
+          <path d="M256,286 L262,298 L268,286 Z"></path>
+        </g>
+        <text x="278" y="282" font-family="Source Sans Pro, sans-serif" font-style="italic" font-size="12.5" fill="#6f6b62">the appended pair vanishes; the base ring remains</text>
+
+        <!-- ===== Scene B: the surviving single-entangler circuit ===== -->
+        <text x="42" y="322" font-family="Source Sans Pro, sans-serif" font-size="13" font-weight="600" letter-spacing="1.2" fill="#6f6b62">THE NET CIRCUIT: ONE ENTANGLER, MANY TUNABLE KNOBS</text>
+
+        <!-- wires -->
+        <g stroke="#8d887c" stroke-width="1.3">
+          <line x1="62" y1="352" x2="400" y2="352"></line>
+          <line x1="62" y1="382" x2="400" y2="382"></line>
+          <line x1="62" y1="412" x2="400" y2="412"></line>
+          <line x1="62" y1="442" x2="400" y2="442"></line>
+        </g>
+        <g font-family="Fira Mono, monospace" font-size="10.5" fill="#9a958a" text-anchor="end">
+          <text x="58" y="356">q1</text><text x="58" y="386">q2</text><text x="58" y="416">q3</text><text x="58" y="446">q4</text>
+        </g>
+
+        <!-- amber rotations cx=150 -->
+        <g>
+          <rect x="135" y="340" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <rect x="135" y="370" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <rect x="135" y="400" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <rect x="135" y="430" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <g font-family="Source Sans Pro, sans-serif" font-size="13" font-weight="600" fill="#9a6f1e" text-anchor="middle">
+            <text x="150" y="356">R</text><text x="150" y="386">R</text><text x="150" y="416">R</text><text x="150" y="446">R</text>
+          </g>
+        </g>
+
+        <!-- one CNOT ring: 1->2, 2->3, 3->4, 4->1 (wrap) -->
+        <rect x="190" y="340" width="120" height="114" rx="9" fill="#e7f2f0" stroke="#2d8f8a" stroke-width="1.5"></rect>
+        <g stroke="#2d8f8a" stroke-width="1.7" fill="none">
+          <line x1="205" y1="352" x2="205" y2="382"></line>
+          <circle cx="205" cy="352" r="4.4" fill="#2d8f8a"></circle>
+          <circle cx="205" cy="382" r="8" fill="#ffffff"></circle>
+          <line x1="197" y1="382" x2="213" y2="382"></line><line x1="205" y1="374" x2="205" y2="390"></line>
+          <line x1="235" y1="382" x2="235" y2="412"></line>
+          <circle cx="235" cy="382" r="4.4" fill="#2d8f8a"></circle>
+          <circle cx="235" cy="412" r="8" fill="#ffffff"></circle>
+          <line x1="227" y1="412" x2="243" y2="412"></line><line x1="235" y1="404" x2="235" y2="420"></line>
+          <line x1="265" y1="412" x2="265" y2="442"></line>
+          <circle cx="265" cy="412" r="4.4" fill="#2d8f8a"></circle>
+          <circle cx="265" cy="442" r="8" fill="#ffffff"></circle>
+          <line x1="257" y1="442" x2="273" y2="442"></line><line x1="265" y1="434" x2="265" y2="450"></line>
+          <line x1="295" y1="352" x2="295" y2="442"></line>
+          <circle cx="295" cy="442" r="4.4" fill="#2d8f8a"></circle>
+          <circle cx="295" cy="352" r="8" fill="#ffffff"></circle>
+          <line x1="287" y1="352" x2="303" y2="352"></line><line x1="295" y1="344" x2="295" y2="360"></line>
+        </g>
+
+        <!-- amber rotations cx=350 -->
+        <g>
+          <rect x="335" y="340" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <rect x="335" y="370" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <rect x="335" y="400" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <rect x="335" y="430" width="30" height="24" rx="6" fill="#f8efd7" stroke="#d4a03f" stroke-width="1.4"></rect>
+          <g font-family="Source Sans Pro, sans-serif" font-size="13" font-weight="600" fill="#9a6f1e" text-anchor="middle">
+            <text x="350" y="356">R</text><text x="350" y="386">R</text><text x="350" y="416">R</text><text x="350" y="446">R</text>
+          </g>
+        </g>
+
+        <text x="250" y="472" text-anchor="middle" font-family="Source Sans Pro, sans-serif" font-size="12" fill="#2d8f8a">one CNOT ring &#8212; the only entangler</text>
+        <text x="250" y="496" text-anchor="middle" font-family="Source Sans Pro, sans-serif" font-size="12.5" fill="#6f6b62">one entangling layer, wrapped in extra single-qubit rotations &#8212; idle at start, free to tune</text>
+      </svg>
+      </div>
+      <figcaption><b>The identity-pairing trick.</b> To deepen the circuit, IP-PDT appends a forward block (rotations, then a CNOT ring) and its exact undo (the reversed ring, then the inverse rotations). The two teal rings annihilate, so at initialization the whole pair equals the identity &mdash; the energy cannot move. What survives, no matter how many pairs you stack, is a <em>single</em> entangling layer wrapped in ever more single-qubit rotations: a deep circuit's tunable parameters at a shallow circuit's two-qubit cost.</figcaption>
+    </figure>
+
+    <div class="toolbox-card">
+      <div class="tb-title">Reusable idea &mdash; warm-started continuation</div>
+      <p>Grow a hard model out of an easy one: converge a shallow circuit, append layers that begin as the identity, then carry the solution across the seam into the deeper circuit. Two effects split cleanly &mdash; the gate savings and the never-jump-up guarantee come from the identity-<em>pairing</em>, while the training speedup comes from the progressive <em>curriculum</em>, not from the pairing itself. It is homotopy continuation on nested manifolds, and the trick travels well beyond VQE.</p>
+    </div>
+  </section>
+
+  <!-- 4 ------------------------------------------------------------------- -->
+  <section>
+    <div class="kicker2"><b>04</b> &middot; The surprise</div>
+    <h2>The circuit stops getting more expressive &mdash; on purpose</h2>
+    <p>Here's the strange part. You'd expect all those extra layers, once you tune them awake, to make the circuit <em>more expressive</em> &mdash; able to reach states it couldn't reach before. They don't. And this can be proven. The set of quantum states an IP-PDT circuit can reach expands exactly once &mdash; the first time rotations appear after the entangler &mdash; and then it saturates. Every layer after that is pure overparameterization: more knobs turning on the same fixed entangling backbone, roaming the same reachable set.</p>
+    <div class="eq">\[ \mathcal{M}_1 \;\subsetneq\; \mathcal{M}_2 \;=\; \mathcal{M}_3 \;=\; \mathcal{M}_4 \;=\; \cdots \]</div>
+
+    <div class="theorem-box">
+      <div class="thm-title">Theorem &mdash; Reachable-set saturation</div>
+      <p>For an IP-PDT circuit built on a single entangling layer, the reachable manifolds obey \(\mathcal{M}_1 \subsetneq \mathcal{M}_2 = \mathcal{M}_3 = \cdots = \mathcal{M}_D\) for every \(D \ge 2\): the set of representable states expands <em>exactly once</em> &mdash; when post-entangler rotations first appear &mdash; and then saturates. Every depth beyond \(D = 2\) is pure overparameterization of single-qubit \(\mathrm{SU}(2)\) rotations around one fixed entangling backbone.</p>
+    </div>
+
+    <p>The reachable sets nest once and then freeze. Depth two can already reach everything depth eleven can. The authors checked it directly: stack the layers to two, three, five, all the way to eleven, and the lowest energy the circuit can represent doesn't budge.</p>
+
+    <figure class="figframe">
+      <img src="./assets/img/ippdt_saturation.png" alt="Bar charts of final energy for depths 1, 2, 3, 5, 7, 11 on three Hamiltonians. Beyond depth two, all bars reach essentially the same energy floor, marked by a dashed exact line.">
+      <figcaption><b>Expressibility hits a wall at depth two.</b> Final energy reached as the circuit is made deeper (the dashed line is the exact ground energy). After the single jump from depth one to depth two, adding layers &mdash; three, five, seven, eleven &mdash; buys no lower energy. The circuit at depth eleven is no more expressive than at depth two; it just carries more redundant knobs.</figcaption>
+    </figure>
+
+    <p>And yet training keeps getting <em>better</em>. Add those provably redundant layers and the optimizer reliably finds lower energies, faster, than the shallow circuit manages on its own. The circuit is no more expressive, but it is more <em>trainable</em>. Expressibility has hit its ceiling; trainability is still climbing. The authors call this <em>trainability beyond expressibility</em> &mdash; it is the paper's title for a reason.</p>
+  </section>
+
+  <!-- ===== HERO INTERACTIVE: DEPTH DIAL (pure inline SVG + vanilla JS) ===== -->
+  <div class="interactive-box" id="depthdial-box">
+    <div class="box-title">🎛️ Depth dial &mdash; turn depth up, watch the reach freeze</div>
+    <div class="controls">
+      <button id="depth-minus" class="secondary" type="button" aria-label="decrease depth">&minus;</button>
+      <label for="depth-slider">circuit depth D:</label>
+      <input type="range" id="depth-slider" min="1" max="5" step="1" value="1">
+      <button id="depth-plus" class="secondary" type="button" aria-label="increase depth">+</button>
+      <span class="readout" id="depth-readout">D = 1</span>
+    </div>
+    <div class="svg-wrap">
+      <svg id="depthdial-svg" width="720" height="360" viewBox="0 0 720 360" role="img" aria-labelledby="dd-title dd-desc" xmlns="http://www.w3.org/2000/svg">
+        <title id="dd-title">Depth dial schematic</title>
+        <desc id="dd-desc">A schematic IP-PDT circuit: one fixed teal entangling ring wrapped in a growing shell of amber single-qubit rotation layers as depth D increases, beside a reachable-set indicator that expands once at D=2 and then saturates.</desc>
+      </svg>
+    </div>
+    <div class="controls">
+      <span class="readout" id="cnot-readout">CNOT gates: n = 6 (constant)</span>
+      <span class="readout" id="param-readout">tunable params &#8776; 3nD = 18 (growing)</span>
+      <span class="readout" id="reach-readout">reachable set: M&#8321; (expands once)</span>
+    </div>
+    <div class="caption">
+      <strong>Schematic &mdash; it illustrates the proven saturation and the exact gate counts, not fitted data.</strong>
+      Slide depth up. After the second step the reachable set stops moving &mdash; you're only adding knobs, not reach.
+      One teal entangling ring stays fixed (its \(n\) two-qubit CNOTs are the whole hardware cost); each extra depth wraps it in another amber shell of single-qubit rotations, so the tunable-angle count climbs like \(3nD\) while the reachable manifold is frozen at \(\mathcal{M}_2\) for every \(D \ge 2\).
+    </div>
+  </div>
+
+  <!-- 5 ------------------------------------------------------------------- -->
+  <section>
+    <div class="kicker2"><b>05</b> &middot; The guarantee</div>
+    <h2>Why an expansion can never set you back</h2>
+    <p>If you're going to grow a circuit over and over, you'd like a promise that no single expansion can undo your progress. IP-PDT gives exactly that promise, unconditionally. Because every appended pair composes to the identity at initialization, the energy at the start of a new stage equals the energy at the end of the last one &mdash; up to a whisper of deliberate noise, a tiny jitter \(\sigma\) that breaks a symmetry so the fresh knobs aren't born perfectly degenerate.</p>
+    <div class="eq">\[ E_{\text{new stage}} \;=\; E_D^{\star} \;+\; \mathcal{O}(\sigma) \]</div>
+
+    <div class="theorem-box">
+      <div class="thm-title">Theorem &mdash; Monotone energy (unconditional)</div>
+      <p>Because each appended block-pair composes to the identity at initialization, an expansion never raises the energy: a new stage begins at \(E_{\text{new}} = E_D^{\star} + \mathcal{O}(\sigma)\), where \(E_D^{\star}\) is the converged energy of the previous stage and \(\sigma\) is a small symmetry-breaking jitter. The guarantee is one-sided &mdash; a new stage starts no higher than the old one finished &mdash; and it assumes nothing about the landscape.</p>
+    </div>
+
+    <p>The energy never jumps up. Expansion after expansion, the worst case is that nothing improves; it cannot get worse than a hair. That is what kills initialization shock &mdash; not as a heuristic that usually works, but as a theorem that always does.</p>
+
+    <figure>
+      <div class="svgwrap">
+      <svg viewBox="0 0 720 320" role="img" aria-labelledby="mn-title mn-desc" xmlns="http://www.w3.org/2000/svg">
+        <title id="mn-title">The monotone energy guarantee</title>
+        <desc id="mn-desc">Energy versus training step. The IP-PDT curve descends and never rises at expansion points, while a naively regrown circuit spikes upward at each expansion.</desc>
+
+        <!-- axes -->
+        <g stroke="#8d887c" stroke-width="1.3">
+          <line x1="96" y1="44" x2="96" y2="248"></line>
+          <line x1="96" y1="248" x2="676" y2="248"></line>
+        </g>
+        <text x="52" y="150" transform="rotate(-90 52 150)" text-anchor="middle" font-family="Source Sans Pro, sans-serif" font-size="13" fill="#6f6b62">Energy</text>
+        <text x="386" y="278" text-anchor="middle" font-family="Source Sans Pro, sans-serif" font-size="13" fill="#6f6b62">Training step &#8594;</text>
+        <text x="104" y="58" font-family="Source Sans Pro, sans-serif" font-size="11.5" fill="#9a958a">lower is better</text>
+
+        <!-- expansion ticks -->
+        <g stroke="#2d8f8a" stroke-width="1.2" stroke-dasharray="4 4">
+          <line x1="250" y1="52" x2="250" y2="248"></line>
+          <line x1="402" y1="52" x2="402" y2="248"></line>
+          <line x1="554" y1="52" x2="554" y2="248"></line>
+        </g>
+        <g font-family="Source Sans Pro, sans-serif" font-size="10.5" fill="#2d8f8a" text-anchor="middle">
+          <text x="250" y="46">expand</text><text x="402" y="46">expand</text><text x="554" y="46">expand</text>
+        </g>
+
+        <!-- naive regrow: spikes up at each tick -->
+        <path d="M96,90 L180,134 L248,150 L250,150 L253,66 L264,150 L330,170 L400,180 L402,180 L405,62 L416,180 L480,198 L552,208 L554,208 L557,60 L568,208 L620,214 L676,218"
+              fill="none" stroke="#b7b1a5" stroke-width="1.6" stroke-dasharray="2 4"></path>
+
+        <!-- IP-PDT: monotone, never up -->
+        <path d="M96,88 L180,132 L250,150 L330,178 L402,192 L480,208 L554,216 L620,220 L676,223"
+              fill="none" stroke="#e6725b" stroke-width="2.6"></path>
+
+        <!-- annotation -->
+        <text x="330" y="118" font-family="Source Sans Pro, sans-serif" font-size="12.5" fill="#c2543f">energy never jumps up:</text>
+        <text x="330" y="136" font-family="Source Sans Pro, sans-serif" font-size="13" font-style="italic" fill="#c2543f">E<tspan font-size="9" dy="3">D</tspan><tspan dy="-3"> + O(&#963;)</tspan></text>
+
+        <!-- legend -->
+        <g font-family="Source Sans Pro, sans-serif" font-size="12.5">
+          <line x1="120" y1="300" x2="150" y2="300" stroke="#e6725b" stroke-width="2.6"></line>
+          <text x="158" y="304" fill="#6f6b62">IP-PDT (identity-paired)</text>
+          <line x1="360" y1="300" x2="390" y2="300" stroke="#b7b1a5" stroke-width="1.6" stroke-dasharray="2 4"></line>
+          <text x="398" y="304" fill="#6f6b62">naive regrow</text>
+        </g>
+      </svg>
+      </div>
+      <figcaption><b>A staircase that only ever goes down.</b> A naively regrown circuit (grey, dotted) throws its energy back up at each expansion; IP-PDT (coral) resumes exactly where it left off, plus a jitter of size \(\sigma\). The guarantee is one-sided and unconditional: expansions can help, and provably cannot hurt.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 6 ------------------------------------------------------------------- -->
+  <section>
+    <div class="kicker2"><b>06</b> &middot; The evidence</div>
+    <h2>Does it actually work?</h2>
+    <p>The right way to picture the whole procedure is <em>homotopy continuation</em>: solve an easy problem, then deform it, step by step, into the hard one while carrying the solution along. So much for the picture &mdash; does it deliver? The experiments run on nine spin-system Hamiltonians, the energy-minimization problems VQE is built for, simulated exactly on a classical computer, ten random seeds each. Every method is handed the same parameter count and the same step budget, so the comparison is about the <em>method</em>, not the resources.</p>
+    <p>The headline is cost. On problems whose ground state is within reach of a single entangling layer, IP-PDT matches or beats a full-depth hardware-efficient circuit while spending about <strong>five times fewer CNOT gates</strong>. Two-qubit gates are the expensive, error-prone resource on real hardware &mdash; the thing you most want to use less of &mdash; so a fivefold cut at equal accuracy is a number that matters for near-term devices.</p>
+
+    <figure class="figframe">
+      <img src="./assets/img/ippdt_trainability.png" alt="A three-by-three grid of energy-versus-step curves at budgets T equals 100, 200, 500 for three Hamiltonians, comparing IP-PDT against single-entangler circuits trained from scratch at fixed depths.">
+      <figcaption><b>The tighter the budget, the bigger the win.</b> Energy versus step across three optimization budgets (rows) and three Hamiltonians (columns). The warm-started IP-PDT run (red, growing through depths 1&rarr;3&rarr;5) reaches the answer ahead of single-entangler circuits trained from scratch at any one fixed depth &mdash; and does so at markedly lower run-to-run variance. Notice the scratch depth-1 circuit stalling high on the middle problem: too few knobs to reach the floor. IP-PDT, carrying its solution up through the depths, gets there.</figcaption>
+    </figure>
+
+    <p>Across the whole benchmark, IP-PDT wins on <strong>seven of the nine</strong> Hamiltonians. It loses on two &mdash; the transverse-field Ising model right at its critical point, and a long-range power-law Ising chain.</p>
+
+    <figure class="figframe">
+      <img src="./assets/img/ippdt_extended.png" alt="Grouped bar chart of energy gap to exact for nine Hamiltonians, comparing IP-PDT, naive PDT, full-depth baseline HEA, and baseline single-entangler. IP-PDT has the smallest gap on most, but the full-depth baseline is lower on TFIM and Power-Law.">
+      <figcaption><b>Wins, and two honest losses.</b> Distance to the exact ground energy across nine Hamiltonians, ordered easiest to hardest (lower is better). IP-PDT (red) is at or near the front for most, but on the two hardest &mdash; the critical-point TFIM and the power-law Ising chain &mdash; the full-depth baseline (brown) reaches lower. Those are exactly the strongly correlated states that sit outside a single entangling layer's reach.</figcaption>
+    </figure>
+
+    <p>The trend also survives scale. Pushed to sixteen qubits, the deep hardware-efficient baseline degrades sharply &mdash; barren-plateau country &mdash; while the single-entangler circuits stay trainable. (The main benchmark is six qubits; twenty and beyond is future work.)</p>
+
+    <div class="tablewrap">
+      <table class="ham">
+        <thead>
+          <tr><th>Hamiltonian</th><th>Structure for a single entangler</th><th>Result</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Tilted Ising</td><td class="note">Easy</td><td class="win">win</td></tr>
+          <tr><td>Mixed-field Ising</td><td class="note">Easy</td><td class="win">win</td></tr>
+          <tr><td>Random Ising</td><td class="note">Medium</td><td class="win">win</td></tr>
+          <tr><td>Spin glass + transverse</td><td class="note">Medium</td><td class="win">win</td></tr>
+          <tr><td>XXZ (&Delta;<sub>z</sub>=0.5)</td><td class="note">Medium</td><td class="win">win</td></tr>
+          <tr><td>Random XY</td><td class="note">Medium</td><td class="win">win</td></tr>
+          <tr><td>Heisenberg (dense)</td><td class="note">Hard</td><td class="win">win</td></tr>
+          <tr><td>TFIM (at criticality)</td><td class="note">Hard</td><td class="loss">loss</td></tr>
+          <tr><td>Power-law Ising (&alpha;=2)</td><td class="note">Hard</td><td class="loss">loss</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-family:'Source Sans Pro',sans-serif; font-size:13.5px; color:#888;">Seven wins, two losses, on the extended six-qubit benchmark. &ldquo;Structure&rdquo; measures how close the ground state sits to what a single entangling layer can reach; the labels are read off after the fact, not fed in.</p>
+  </section>
+
+  <!-- 7 ------------------------------------------------------------------- -->
+  <section>
+    <div class="kicker2"><b>07</b> &middot; The honest part</div>
+    <h2>Where it stops working &mdash; said plainly</h2>
+    <p>A method is only as trustworthy as its own account of where it fails. IP-PDT's regime is narrow and clearly drawn, so let's draw it &mdash; three caveats, none of them fine print.</p>
+    <p><em>First, this is not a general escape from barren plateaus.</em> The larger gradient signal that helps IP-PDT shows up on <em>local</em> cost functions and is partly just a shallow-circuit effect that a shallow hardware-efficient circuit shares; for <em>global</em> cost functions every ansatz here flattens out identically and the single-entangler circuit offers no advantage, exactly as the barren-plateau literature (Cerezo and colleagues) predicts.</p>
+    <p><em>Second, the expressibility ceiling is real.</em> When the target ground state sits far from anything a single entangling layer can reach, the shallow circuit simply cannot represent it &mdash; which is precisely why IP-PDT loses on the two hardest Hamiltonians. The dividing line, tellingly, is <em>structure</em>, not the sheer amount of entanglement: the single-entangler circuit nails even a highly entangled GHZ-like &ldquo;cat&rdquo; state, and stumbles only when a state's structure falls outside its reach.</p>
+    <p><em>Third, the whole construction rests on a single entangling layer</em> &mdash; one CNOT ring. Extending the backbone to more than one entangling layer is open, and it is the most natural next question.</p>
+
+    <div class="ledger">
+      <div class="col good">
+        <h4>Where it shines</h4>
+        <ul>
+          <li>Ground states within reach of one entangling layer</li>
+          <li>Local cost functions</li>
+          <li>Tight optimization budgets</li>
+          <li>Growing qubit counts (trainable at n=16)</li>
+        </ul>
+      </div>
+      <div class="col stop">
+        <h4>Where it stops</h4>
+        <ul>
+          <li>Strongly correlated states outside that reach</li>
+          <li>Global cost functions (no advantage)</li>
+          <li>Backbones beyond one entangling layer (open)</li>
+        </ul>
+      </div>
+    </div>
+    <p>Put plainly: <em>IP-PDT is a useful VQE training method with a clearly mapped regime of validity. It shines when the ground state is structurally simple, on local costs, under a limited budget. It is not a universal barren-plateau cure &mdash; and it tells you exactly where it stops working.</em></p>
+  </section>
+
+  <!-- 8 ------------------------------------------------------------------- -->
+  <section>
+    <div class="kicker2"><b>08</b> &middot; The takeaway</div>
+    <h2>A small, honest idea with a clean payoff</h2>
+    <p>Strip away the machinery and IP-PDT is a modest idea that earns its keep. Add layers that begin as the identity and two good things follow for free from the pairing itself: the energy can never jump up when you expand, and the two-qubit gates you were afraid of quietly cancel in pairs, so you pay only a shallow circuit's hardware cost. The trainability is a separate gift, and it comes from the <em>curriculum</em> &mdash; growing the circuit shallow-first and carrying the solution up through the depths, rather than training a deep circuit cold. The surprise the two ideas turned up together &mdash; that a circuit can keep getting easier to train long after it has stopped getting more expressive &mdash; is worth sitting with, because it pries apart two things the field usually bundles into one.</p>
+
+    <div class="insight-box">
+      <div class="insight-title">The open door</div>
+      <p>The obvious next move is written into the last caveat: the whole story rests on one entangling layer. What happens with two &mdash; or \(K\)? Does the reachable set climb one more rung and saturate again, or does the barren plateau return? That is the question the paper leaves open, and it's a good one.</p>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER (series) ===== -->
+  <div class="footer">
+    <div class="flinks">
+      <a href="./blogposts.html">&larr; More from QuanTAS</a>
+      <a href="https://github.com/tanihad/PDT-VQE">Code on GitHub</a>
+      <a href="https://akyrillidis.github.io/group/">OptimaLab</a>
+    </div>
+    <p>Athanasios Hadjidimoulas, Tirthak Patel, and Anastasios Kyrillidis, <em>&ldquo;Identity-Paired Progressive Depth Training: When Trainability Persists Beyond Expressibility.&rdquo;</em> Rice University. This is a preprint &mdash; not peer-reviewed; figures and numbers are drawn from the manuscript and its accompanying experiments.</p>
+    <pre>@article{Hadjidimoulas2026ippdt,
+  title   = {Identity-Paired Progressive Depth Training: When Trainability Persists Beyond Expressibility},
+  author  = {Hadjidimoulas, Athanasios and Patel, Tirthak and Kyrillidis, Anastasios},
+  journal = {Preprint},
+  year    = {2026}
+}</pre>
+    <p class="disc"><strong>Acknowledgements.</strong> This research was funded in part by Rice University (Faculty Initiative award), NSF FET:Small (award no. 1907936), NSF CAREER (award no. 2145629), and a Microsoft Research Award. AK also thanks the Ken Kennedy Institute at Rice University for its support through the Research Cluster &ldquo;QuanTAS.&rdquo;</p>
+    <p class="disc">&copy; 2026 OptimaLab and QuanTAS, Rice University. Built with <a href="https://www.mathjax.org">MathJax</a> and hand-rolled SVG. Part of the <a href="https://akyrillidis.github.io/explore-quantum/">QuanTAS</a> project.</p>
+  </div>
+
+</div><!-- .container -->
+
+<!-- ============================================================ -->
+<!-- HERO INTERACTIVE — DEPTH DIAL (pure inline SVG + vanilla JS)  -->
+<!-- ============================================================ -->
+<script>
+(function () {
+"use strict";
+var NS = "http://www.w3.org/2000/svg";
+var svg = document.getElementById("depthdial-svg");
+if (!svg) return;
+
+function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    (parent || svg).appendChild(e);
+    return e;
+}
+function txt(x, y, s, extra, parent) {
+    var a = { x: x, y: y };
+    if (extra) { for (var k in extra) a[k] = extra[k]; }
+    var t = el("text", a, parent);
+    t.textContent = s;
+    return t;
+}
+
+var N = 6;                                   // qubits; one CNOT ring = n two-qubit gates
+var SANS = "Source Sans Pro, sans-serif";
+var TEAL = "#2d8f8a", AMBER = "#d4a03f", AMBER_T = "#f8efd7";
+var ACC = "#648FFF", ACC2 = "#785EF0", MAG = "#DC267F", MUTE = "#6f6b62";
+
+/* ---------- static scaffolding (drawn once) ---------- */
+var wy = [], j;
+for (j = 0; j < N; j++) wy.push(70 + j * 32);
+var wTop = wy[0], wBot = wy[N - 1];
+var ringX = 180, ringHalf = 20, baseX = 128;
+
+for (j = 0; j < N; j++)
+    el("line", { x1: 60, y1: wy[j], x2: 430, y2: wy[j], stroke: "#9a948a", "stroke-width": 1.3 });
+
+txt(245, 44, "CIRCUIT  (schematic)", { "text-anchor": "middle", "font-family": SANS, "font-size": 12.5, "font-weight": 700, "letter-spacing": "0.08em", fill: MUTE });
+
+// one fixed teal entangling ring at center
+el("rect", { x: ringX - ringHalf, y: wTop - 12, width: ringHalf * 2, height: (wBot - wTop) + 24, rx: 9, fill: "#e7f2f0", stroke: TEAL, "stroke-width": 1.7 });
+el("line", { x1: ringX, y1: wTop, x2: ringX, y2: wBot, stroke: TEAL, "stroke-width": 1.7 });
+el("circle", { cx: ringX, cy: wy[0], r: 4.6, fill: TEAL });
+el("circle", { cx: ringX, cy: wy[3], r: 4.6, fill: TEAL });
+[wy[1], wy[4]].forEach(function (cy) {
+    el("circle", { cx: ringX, cy: cy, r: 8, fill: "#fff", stroke: TEAL, "stroke-width": 1.7 });
+    el("line", { x1: ringX - 8, y1: cy, x2: ringX + 8, y2: cy, stroke: TEAL, "stroke-width": 1.7 });
+    el("line", { x1: ringX, y1: cy - 8, x2: ringX, y2: cy + 8, stroke: TEAL, "stroke-width": 1.7 });
+});
+txt(ringX, wBot + 30, "1 CNOT ring — fixed", { "text-anchor": "middle", "font-family": SANS, "font-size": 12, fill: TEAL });
+
+// reachable-set panel frame + ambient region a single entangler can reach
+el("rect", { x: 498, y: 58, width: 200, height: 250, rx: 10, fill: "#fbfaff", stroke: "#d4d9ee", "stroke-width": 1.4 });
+txt(598, 82, "REACHABLE SET", { "text-anchor": "middle", "font-family": SANS, "font-size": 12, "font-weight": 700, "letter-spacing": "0.07em", fill: "#2a5bd7" });
+el("circle", { cx: 598, cy: 188, r: 84, fill: "#eef1fb", stroke: "#c7cef0", "stroke-width": 1.3, "stroke-dasharray": "3 4" });
+
+/* ---------- dynamic group (redrawn each step) ---------- */
+var dyn = el("g", {});
+
+var slider = document.getElementById("depth-slider");
+var dOut = document.getElementById("depth-readout");
+var cnotOut = document.getElementById("cnot-readout");
+var paramOut = document.getElementById("param-readout");
+var reachOut = document.getElementById("reach-readout");
+
+function rotColumn(cx) {
+    for (var i = 0; i < N; i++)
+        el("rect", { x: cx - 9, y: wy[i] - 10, width: 18, height: 20, rx: 5, fill: AMBER_T, stroke: AMBER, "stroke-width": 1.4 }, dyn);
+}
+
+function render(D) {
+    while (dyn.firstChild) dyn.removeChild(dyn.firstChild);
+
+    // base rotation layer (layer 0), fixed to the LEFT of the entangling ring
+    rotColumn(baseX);
+    // appended post-entangler rotation layers grow to the RIGHT only (depth is appended)
+    for (var d = 1; d <= D - 1; d++)
+        rotColumn(ringX + ringHalf + 20 + (d - 1) * 44);   // right shell only
+    txt(232, wBot + 48,
+        D === 1 ? "base rotations · one ring" : "one fixed ring · " + D + " rotation layers, appended rightward",
+        { "text-anchor": "middle", "font-family": SANS, "font-size": 11.5, "font-style": "italic", fill: MUTE }, dyn);
+
+    // reachable set: expands once (D:1->2), then frozen for all D>=2
+    var expanded = D >= 2, cx = 598, cy = 188;
+    if (expanded) {
+        el("circle", { cx: cx, cy: cy, r: 34, fill: "none", stroke: "#b9a9f2", "stroke-width": 1.4, "stroke-dasharray": "3 3" }, dyn);
+        el("circle", { cx: cx, cy: cy, r: 80, fill: ACC2, "fill-opacity": 0.20, stroke: ACC2, "stroke-width": 2 }, dyn);
+        txt(cx, cy + 5, "ℳ₂ = ℳ₃ = …", { "text-anchor": "middle", "font-family": SANS, "font-size": 15, "font-weight": 700, fill: "#4c3a9e" }, dyn);
+        el("rect", { x: cx - 66, y: 252, width: 132, height: 24, rx: 12, fill: MAG }, dyn);
+        txt(cx, 268, "SATURATED", { "text-anchor": "middle", "font-family": SANS, "font-size": 12.5, "font-weight": 700, "letter-spacing": "0.06em", fill: "#fff" }, dyn);
+        txt(cx, 293, "no new states", { "text-anchor": "middle", "font-family": SANS, "font-size": 11.5, fill: MUTE }, dyn);
+    } else {
+        el("circle", { cx: cx, cy: cy, r: 34, fill: ACC, "fill-opacity": 0.22, stroke: ACC, "stroke-width": 2 }, dyn);
+        txt(cx, cy + 5, "ℳ₁", { "text-anchor": "middle", "font-family": SANS, "font-size": 15, "font-weight": 700, fill: "#2a5bd7" }, dyn);
+        txt(cx, 268, "will expand once →", { "text-anchor": "middle", "font-family": SANS, "font-size": 12, fill: MUTE }, dyn);
+    }
+
+    // live counters (CNOT constant, params growing)
+    dOut.textContent = "D = " + D;
+    cnotOut.textContent = "CNOT gates: n = " + N + " (constant)";
+    paramOut.textContent = "tunable params ≈ 3nD = " + (3 * N * D) + " (growing)";
+    reachOut.textContent = expanded ? "reachable set: ℳ₂ — SATURATED" : "reachable set: ℳ₁ (expands once)";
+    if (slider.value !== String(D)) slider.value = D;
+}
+
+function setD(D) {
+    D = Math.max(1, Math.min(5, D));
+    render(D);
+}
+slider.addEventListener("input", function () { setD(parseInt(slider.value, 10)); });
+document.getElementById("depth-minus").addEventListener("click", function () { setD(parseInt(slider.value, 10) - 1); });
+document.getElementById("depth-plus").addEventListener("click", function () { setD(parseInt(slider.value, 10) + 1); });
+setD(1);
+})();
+</script>
+
+</body>
+</html>

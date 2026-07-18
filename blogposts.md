@@ -77,6 +77,20 @@ layout: default
   <li>
     <div class="blog-row">
       <span class="thumb">
+        <a href="./IP-PDT.html">
+          <img src="./assets/img/ippdt_shock.png" alt="">
+        </a>
+      </span>
+      <span class="title">
+        <a href="./IP-PDT.html">Identity-Paired Progressive Depth Training: When Trainability Persists Beyond Expressibility</a>
+        <span class="meta">A structural trick that trains variational quantum eigensolvers with ~5&times; fewer two-qubit gates — plus a theorem for why the circuit stops growing yet keeps improving.</span>
+      </span>
+    </div>
+  </li>
+
+  <li>
+    <div class="blog-row">
+      <span class="thumb">
         <a href="./QLSP_PPA.html">
           <img src="./assets/img/QLSP_algorithm.png" alt="">
         </a>
