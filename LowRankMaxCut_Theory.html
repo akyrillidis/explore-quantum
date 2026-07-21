@@ -188,7 +188,7 @@ This series is about one optimization problem. Take a matrix \(\mathbf{Q} \in \m
 \]
 where every coordinate of \(\mathbf{z}\) must be one of the \(K\)-th
 <span class="tooltip-term" data-tooltip="The K complex numbers whose K-th power equals 1. They sit at K equally spaced angles on the unit circle — a natural alphabet for 'K colors'.">roots of unity</span>.
-For \(K=3\) this encodes <strong>Max-3-Cut</strong>: color the \(n\) vertices of a graph with 3 colors so as to cut as many
+For \(K=3\) this encodes <strong>Max-3-Cut</strong>: color the \(n\) vertices of a graph with 3 colors to cut as many
 edges as possible. In <a href="LowRankMaxCut_GPU.html">Blog&nbsp;1</a> and <a href="LowRankMaxCut_Rank1.html">Blog&nbsp;2</a>
 we exploited the structural fact that when \(\mathbf{Q} = \mathbf{V}\mathbf{V}^\dagger\) has <strong>rank \(r\)</strong>,
 the problem stops being a search over \(K^n\) colorings: the global maximizer provably lives in a candidate set of size
@@ -397,7 +397,7 @@ awkward maximum of \(n\) absolute values by a single inner product.</div>
 <p>
 Now everything hinges on the scalar \(X = |\mathbf{u}^\dagger \mathbf{c}|^2\), the squared alignment between your
 uniform dart \(\mathbf{c}\) and the fixed direction \(\mathbf{u} = \mathbf{a}/\|\mathbf{a}\|_2\).
-On the <em>complex</em> \(r\)-sphere this has a beautiful exact law:
+On the <em>complex</em> \(r\)-sphere this has an exact law:
 \[
     X \sim \mathrm{Beta}(1, r-1)
     \qquad\Longrightarrow\qquad
@@ -564,7 +564,7 @@ in the Paley–Zygmund ratio.</div>
 <div class="toolbox-card">
     <div class="tb-title">Tool #4 — Incoherence, used honestly</div>
     <p>
-    The workhorse hypothesis of matrix completion and randomized linear algebra, in a new role: not to make sampling
+    The standard hypothesis of matrix completion and randomized linear algebra, in a new role: not to make sampling
     uniformizable, but to pin the combinatorial optimum to the analog scale \(\Lambda n\). Note the discipline: it is
     the <em>only</em> assumption, it is measurable on any instance (compute the eigenvectors, read off \(\mu\)),
     and its possible \(n\)-dependence is stated rather than hidden.

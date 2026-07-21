@@ -210,13 +210,13 @@
     </center>
     <p>
         Solving systems of linear equations is essential in numerous applications, from scientific computing to machine learning. 
-        Classical algorithms like Gaussian elimination and iterative methods scale poorly with the problem size, often rendering large-scale problems intractable. 
+        Classical algorithms like Gaussian elimination and iterative methods scale poorly with the problem size, often making large-scale problems intractable. 
         Quantum algorithms offer a potential breakthrough by reducing the dependency on problem dimensions from polynomial to logarithmic, as demonstrated by the Harrow-Hassidim-Lloyd (HHL) algorithm. 
         Despite this, the performance of quantum algorithms is severely impacted by the condition number \(\kappa\) of the matrix, which measures the sensitivity of the system to numerical errors. 
         High-condition numbers can significantly degrade the efficiency of quantum solutions, a challenge we address in this study.
     </p>
     <p>
-        Our approach leverages the classical proximal point algorithm (PPA), a method renowned for improving problem conditioning in optimization tasks. 
+        Our approach uses the classical proximal point algorithm (PPA), a method renowned for improving problem conditioning in optimization tasks. 
         By adapting PPA to the quantum domain, we introduce a framework that enhances the performance of existing quantum linear system solvers. 
         The key innovation lies in modifying the matrix to be inverted, thus reducing the effective condition number and improving convergence rates. 
         This method can be seamlessly integrated with various quantum solvers, providing a versatile tool for tackling a broader class of linear system problems.
@@ -261,13 +261,13 @@
     </p>
         <ul>
             <li><strong>Improved Condition Number:</strong> Our method reduces the effective condition number from \(\kappa\) to \(\frac{\kappa (1+\eta)}{\kappa + \eta}\), where \(\eta\) is a tunable parameter. This reduction alleviates the dependence of the algorithm on the condition number, leading to faster convergence.</li>
-            <li><strong>Flexibility:</strong> The proposed framework is versatile, allowing for different QLSP solvers to be used as subroutines. This flexibility enables users to choose the most appropriate solver for their specific problem.</li>
+            <li><strong>Flexibility:</strong> The proposed framework is versatile, allowing different QLSP solvers to be used as subroutines. This flexibility enables users to choose the most appropriate solver for their specific problem.</li>
             <li><strong>Tunable Parameter \(\eta\):</strong> By carefully selecting the parameter \(\eta\), users can balance the trade-off between runtime and approximation error, optimizing overall algorithmic complexity.</li>
         </ul>
     <p>
         Our approach stands out by directly approximating the solution vector \(x^\star = A^{-1}b\) through iterative refinement. 
         This is in contrast to existing methods that focus on approximating the inverse of the coefficient matrix \(A\). 
-        By inverting a modified matrix \((I + \eta A)\), our algorithm effectively preconditions the system, resulting in a better-conditioned problem that converges more rapidly.
+        By inverting a modified matrix \((I + \eta A)\), our algorithm effectively preconditions the system, resulting in a better-conditioned problem that converges faster.
     </p>    
 
     <br><hr>
@@ -277,7 +277,7 @@
         </h2>
     </center>
     <p>
-        Our proposed algorithm employs the proximal point algorithm (PPA) to iteratively solve the QLSP. 
+        Our proposed algorithm uses the proximal point algorithm (PPA) to iteratively solve the QLSP. 
         The core idea is to invert the modified matrix \((I + \eta A)\) instead of the original matrix \(A\), thus improving the system's conditioning. 
         The algorithm proceeds as follows:        
     </p>      
@@ -295,7 +295,7 @@
                 </td>
     
     <p>
-        The convergence rate and error bounds of our algorithm are rigorously analyzed. 
+        We rigorously analyze the convergence rate and error bounds of our algorithm. 
         By carefully choosing the parameter \(\eta\), the algorithm balances the trade-off between runtime and approximation error. 
         Our theoretical analysis demonstrates that the proposed method achieves faster convergence and greater accuracy than existing quantum solvers, especially for ill-conditioned problems.
     </p>  
@@ -339,14 +339,14 @@
                 
     <p>
         Our proposed framework significantly alleviates the dependency on the condition number in solving the Quantum Linear System Problem (QLSP). 
-        By leveraging the proximal point algorithm (PPA), we introduce a meta-algorithm that enhances the performance of existing quantum solvers, broadening their applicability to more challenging, ill-conditioned problems.
+        By using the proximal point algorithm (PPA), we introduce a meta-algorithm that enhances the performance of existing quantum solvers, broadening their applicability to more challenging, ill-conditioned problems.
     </p>
     <p>
         Future work will explore several promising directions:
     </p>
         <ul>
             <li><strong>Multi-step PPA Implementation:</strong> Extending the algorithm to multi-step PPA implementations could further improve convergence rates and reduce runtime. This involves developing efficient methods for handling multiple iterations of the modified matrix inversion.</li>
-            <li><strong>Warm Starting:</strong> Investigating strategies for better initialization (warm starting) can lead to improved convergence. This may involve using prior knowledge about the solution or leveraging other quantum or classical solvers to provide a good starting point.</li>
+            <li><strong>Warm Starting:</strong> Investigating strategies for better initialization (warm starting) can lead to improved convergence. This may involve using prior knowledge about the solution or using other quantum or classical solvers to provide a good starting point.</li>
             <li><strong>Hybrid Approaches:</strong> Combining our framework with other optimization techniques, such as quantum-inspired algorithms, could yield even more efficient solvers.</li>
         </ul>
         

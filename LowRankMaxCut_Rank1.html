@@ -627,7 +627,7 @@ We tested five methods on 45 graph instances across five families: 5-regular, to
     <li><strong>Rank-1:</strong> 2-eigenvector phase sweep with incremental scoring (this work).</li>
     <li><strong>Greedy:</strong> steepest-ascent local search from random initialization. Each iteration moves one node to the partition that maximizes the cut increase; the algorithm terminates when no improving move exists. This is the natural generalization to Max-\(K\)-Cut of the classic Max-Cut swap heuristic, which guarantees a \((1-1/K)\)-approximation <a href="#ref-frieze">[1]</a>. We use incremental scoring for \(O(\text{degree})\) per move.</li>
     <li><strong>Hybrid:</strong> greedy local search warm-started from the rank-1 solution instead of a random partition.</li>
-    <li><strong>SA:</strong> simulated annealing <a href="#ref-sa">[2]</a> with Metropolis acceptance and geometric cooling. The initial temperature is calibrated so that typical worsening moves (of magnitude \(\sim 2d\), where \(d\) is the average degree) are accepted with probability \(\sim 50\%\).</li>
+    <li><strong>SA:</strong> simulated annealing <a href="#ref-sa">[2]</a> with Metropolis acceptance and geometric cooling. We calibrate the initial temperature so that typical worsening moves (of magnitude \(\sim 2d\), where \(d\) is the average degree) are accepted with probability \(\sim 50\%\).</li>
 </ul>
 
 <h3>Graphs</h3>

@@ -434,7 +434,7 @@ The natural question: can we get rank-2 quality without rank-2 cost? The answer 
 </div>
 
 <p>
-This is surprising. Each triple of row indices defines a candidate partition; a &ldquo;good&rdquo; triple is one whose resulting partition scores close to optimal. A priori, one might expect good triples to become a vanishing fraction of the \(O(n^3)\) total as \(n\) grows. Instead, the spectral structure concentrates the mass: most random triples produce partitions that are close to optimal. The randomized algorithm inherits rank-2&rsquo;s ability to explore the full spectral subspace at a cost that is independent of \(n\). (Tested at \(n = 250\) to \(1{,}500\) against exact rank-2; indirect evidence to \(n = 1{,}400{,}000\) via fixed-budget runs.)
+This is surprising. Each triple of row indices defines a candidate partition; a &ldquo;good&rdquo; triple is one whose resulting partition scores close to optimal. A priori, one might expect good triples to become a vanishing fraction of the \(O(n^3)\) total as \(n\) grows. Instead, the spectral structure concentrates the mass: most random triples produce partitions close to optimal. The randomized algorithm inherits rank-2&rsquo;s ability to explore the full spectral subspace at a cost independent of \(n\). (Tested at \(n = 250\) to \(1{,}500\) against exact rank-2; indirect evidence to \(n = 1{,}400{,}000\) via fixed-budget runs.)
 </p>
 
 <p>
@@ -687,7 +687,7 @@ On most graphs, R2G trades a small quality deficit against SA for a large speedu
 <h2>5. What Doesn&rsquo;t Work</h2>
 
 <p>
-<strong>Regular graphs: tied with rank-1.</strong> On 5-regular graphs, the top two eigenvalues are nearly degenerate (eigengap &lt; 0.02%), so rank-2 provides no additional spectral information over rank-1. The R2G score of 703,767 on the 100K-node regular graph is actually <em>worse</em> than the Hybrid score of 727,090: the rank-2 partition, while similar in quality to rank-1&rsquo;s, leads the greedy phase to a less favorable local optimum on these graphs. When the eigengap is effectively zero, rank-1 is the right initialization.
+<strong>Regular graphs: tied with rank-1.</strong> On 5-regular graphs, the top two eigenvalues are nearly degenerate (eigengap &lt; 0.02%), so rank-2 provides no additional spectral information over rank-1. The R2G score of 703,767 on the 100K-node regular graph is <em>worse</em> than the Hybrid score of 727,090: the rank-2 partition, while similar in quality to rank-1&rsquo;s, leads the greedy phase to a less favorable local optimum on these graphs. When the eigengap is effectively zero, rank-1 is the right initialization.
 </p>
 
 <p>

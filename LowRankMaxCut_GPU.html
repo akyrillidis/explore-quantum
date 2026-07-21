@@ -446,7 +446,7 @@ In the Rice University Data Center, there sit four machines that most researcher
 </p>
 
 <p>
-Our question was simple: <em>can these obsolete machines, working together, solve hard combinatorial optimization problems competitively?</em> The answer turns out to be yes &mdash; but only if you pick an algorithm that matches what the hardware can actually do. Instead of running a monolithic SDP solver on a single expensive node, we exploit the low-rank structure of quadratic problems to decompose the problem into millions of independent candidate evaluations. Each evaluation is a tiny matrix operation &mdash; exactly the workload a P100 was designed for.
+Our question was simple: <em>can these obsolete machines, working together, solve hard combinatorial optimization problems competitively?</em> The answer turns out to be yes &mdash; but only if you pick an algorithm that matches what the hardware can do. Instead of running a monolithic SDP solver on a single expensive node, we exploit the low-rank structure of quadratic problems to decompose the problem into millions of independent candidate evaluations. Each evaluation is a tiny matrix operation &mdash; exactly the workload a P100 was designed for.
 </p>
 
 <table class="hw-table">
@@ -610,7 +610,7 @@ The Rank-2 algorithm generates a polynomial number of candidate solutions that m
 
 <h3>Why not Ray? Why not Triton?</h3>
 <p>
-Our first instinct was to use <a href="https://ray.io">Ray</a> for distributed task scheduling. Ray is elegant and well-documented &mdash; and it does not build on ppc64le (the PowerPC architecture running on kp001 and kp002). We also considered <a href="https://triton-lang.org">Triton</a> for custom GPU kernels, but Triton requires CUDA compute capability 7.0+, and the P100 is stuck at 6.0. We were left with the most portable tool in the PyTorch ecosystem: <code>torch.multiprocessing</code>.
+Our first instinct was to use <a href="https://ray.io">Ray</a> for distributed task scheduling. Ray is well-documented &mdash; and it does not build on ppc64le (the PowerPC architecture running on kp001 and kp002). We also considered <a href="https://triton-lang.org">Triton</a> for custom GPU kernels, but Triton requires CUDA compute capability 7.0+, and the P100 is stuck at 6.0. We were left with the most portable tool in the PyTorch ecosystem: <code>torch.multiprocessing</code>.
 </p>
 
 <h3>The worker design</h3>
@@ -703,7 +703,7 @@ All Rank-2 runs used throughput-proportional splitting across 15 GPUs.
 </p>
 
 <p>
-<strong>SBM (Stochastic Block Model):</strong> Here we must be honest &mdash; Rank-2 underperforms. On SBM graphs, Greedy consistently achieves the highest cut values, followed by SDP, with Rank-2 typically 5&ndash;7% below the best. The reason is clear from the spectral energy ratios: SBM graphs have relatively flat spectra, so the top-2 eigenvalues capture only a small fraction of the total energy. Low-rank methods simply cannot see enough of the graph structure.
+<strong>SBM (Stochastic Block Model):</strong> Here we must be honest &mdash; Rank-2 underperforms. On SBM graphs, Greedy consistently achieves the highest cut values, followed by SDP, with Rank-2 typically 5&ndash;7% below the best. The reason is clear from the spectral energy ratios: SBM graphs have relatively flat spectra, so the top-2 eigenvalues capture only a small fraction of the total energy. Low-rank methods cannot see enough of the graph structure.
 </p>
 
 <div class="interactive-box" id="scaling-box">
@@ -798,7 +798,7 @@ Every method has its strengths and weaknesses. Rather than overselling our appro
 
 <h3>Limitations</h3>
 <p>
-The \(\mathcal{O}(n^5)\) asymptotic complexity of Rank-2 is the elephant in the room. While parallelism hides this for moderate \(n\), at \(n = 2000\) the candidate count reaches \(\sim 10^{13}\), which would require hundreds of GPUs. Rank-3 (\(\mathcal{O}(n^7)\)) is even worse. Future work on randomized candidate sampling &mdash; evaluating only a random subset of candidates &mdash; could dramatically reduce this cost while maintaining solution quality with high probability.
+The \(\mathcal{O}(n^5)\) asymptotic complexity of Rank-2 is the obvious drawback. While parallelism hides this for moderate \(n\), at \(n = 2000\) the candidate count reaches \(\sim 10^{13}\), which would require hundreds of GPUs. Rank-3 (\(\mathcal{O}(n^7)\)) is even worse. Future work on randomized candidate sampling &mdash; evaluating only a random subset of candidates &mdash; could dramatically reduce this cost while maintaining solution quality with high probability.
 </p>
 
 <p>
