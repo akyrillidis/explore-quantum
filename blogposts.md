@@ -77,6 +77,20 @@ layout: default
   <li>
     <div class="blog-row">
       <span class="thumb">
+        <a href="./QLSP_ConditionNumber.html">
+          <img src="./assets/img/qlsp_rhs_concentration.png" alt="">
+        </a>
+      </span>
+      <span class="title">
+        <a href="./QLSP_ConditionNumber.html">The condition-number tax</a>
+        <span class="meta">Same matrix, same condition number, three iterations or three thousand &mdash; and why the classical and quantum notions of an easy instance are not the same set.</span>
+      </span>
+    </div>
+  </li>
+
+  <li>
+    <div class="blog-row">
+      <span class="thumb">
         <a href="./IP-PDT.html">
           <img src="./assets/img/ippdt_shock.png" alt="">
         </a>
@@ -98,20 +112,6 @@ layout: default
       <span class="title">
         <a href="./QLSP_PPA.html">A Catalyst Framework for the Quantum Linear System Problem via the Proximal Point Algorithm</a>
         <span class="meta">A classical-acceleration recipe — the proximal point algorithm — applied to quantum linear-system solvers.</span>
-      </span>
-    </div>
-  </li>
-
-  <li>
-    <div class="blog-row">
-      <span class="thumb">
-        <a href="./QLSP_ConditionNumber.html">
-          <img src="./assets/img/qlsp_rhs_concentration.png" alt="">
-        </a>
-      </span>
-      <span class="title">
-        <a href="./QLSP_ConditionNumber.html">The condition-number tax</a>
-        <span class="meta">Same matrix, same condition number, three iterations or three thousand — and why the classical and quantum notions of an easy instance are not the same set.</span>
       </span>
     </div>
   </li>
