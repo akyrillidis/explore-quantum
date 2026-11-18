@@ -51,7 +51,7 @@
   hero.addEventListener("mousemove", function (e) { var r = A.getBoundingClientRect(); mouse = [e.clientX - r.left, e.clientY - r.top]; });
   hero.addEventListener("mouseleave", function () { mouse = null; });
   var tm; window.addEventListener("resize", function () { clearTimeout(tm); tm = setTimeout(layout, 150); });
-  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) { draw(t0 + 4000); return; }
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) { frames = 5; draw(t0 + 4000); return; }
   if ("IntersectionObserver" in window) {
     new IntersectionObserver(function (en) { running = en[0].isIntersecting; if (running && !raf) raf = requestAnimationFrame(loop); }).observe(hero);
   }
