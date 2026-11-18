@@ -15,16 +15,16 @@ about_heading: About the group
 blog_page: /blogposts.html
 footer_text: Understanding the limits of Quantum Theory, Algorithms and Systems. Supported by Ken Kennedy Institute (Rice University).
 nav:
-  - title: Blog
+  - title: Log
     url: /blogposts.html
-  - title: Publications
+  - title: Papers
     url: /publications.html
   - title: People
     url: /#people
 footer_links:
-  - title: Blog
+  - title: Log
     url: /blogposts.html
-  - title: Publications
+  - title: Papers
     url: /publications.html
   - title: Rice University
     url: https://www.rice.edu/

@@ -1,12 +1,14 @@
 # Blog cards for the home page and blogposts.html, sorted by date at build time (newest first).
 # Titles match the old index; summaries are one line drawn from the old index blurbs; dates are the
-# time each post first landed in git; minutes = words / 230. New post: add one entry (BLOGPOST.md).
+# time each post first landed in git; minutes = words / 230. New post: add one entry (BLOGPOST.md),
+# with map: [x, y] for its place on the 1600 x 1000 map (axes in _data/map.yml).
 - url: /QLSP_ConditionNumber.html
   title: The condition-number tax
   date: 2026-08-03 08:50:47 +0300
   minutes: 12
   summary: Same matrix, same condition number, three iterations or three thousand; the classical and quantum notions of an easy instance are not the same set.
   authors: Anastasios Kyrillidis
+  map: [560, 830]
   thumb: /assets/img/qlsp_rhs_concentration.png
   thumb_alt: "CG iterations rising from 1 to over 2000 as the number of eigen-directions in b grows, at fixed condition number."
 - url: /IP-PDT.html
@@ -15,6 +17,7 @@
   minutes: 13
   summary: A structural trick that trains variational quantum eigensolvers with about 5× fewer two-qubit gates, plus a theorem for why the circuit stops growing yet keeps improving.
   authors: Athanasios Hadjidimoulas, Tirthak Patel, Anastasios Kyrillidis
+  map: [1270, 820]
   thumb: /assets/img/ippdt_shock.png
   thumb_alt: "Three energy-versus-step panels for TFIM, Tilted Ising, and Random Ising. A dotted curve spikes sharply upward at every expansion point; the IP-PDT curve and a copy-initialized curve stay flat."
 - url: /LowRankMaxCut_Theory.html
@@ -24,6 +27,7 @@
   series: Max-K-Cut series · theory
   summary: The sample-complexity theory behind the series, with a dart budget independent of n.
   authors: Ria Stevens, Fangshuo Liao, Barbara Su, Thanasis Hadjidimoulas, Jianqiang Li, Anastasios Kyrillidis
+  map: [260, 170]
   thumb: /assets/img/theory_sampling_n_independence.png
   thumb_alt: "Best-of-S curves across three graph families: curves for n spanning three orders of magnitude overlap and plateau at the same S"
 - url: /LowRankMaxCut_DSatur.html
@@ -33,6 +37,7 @@
   series: Max-K-Cut series · blog 4
   summary: A DSatur and spectral ensemble that beats SA on 11 of 13 graph families.
   authors: Ria Stevens, Fangshuo Liao, Barbara Su, Jianqiang Li, Anastasios Kyrillidis
+  map: [860, 170]
   thumb: /assets/img/series/maxkcut_blog4_dsatur.svg
   thumb_alt: Max-K-Cut series, blog 4
 - url: /LowRankMaxCut_RandR2.html
@@ -42,6 +47,7 @@
   series: Max-K-Cut series · blog 3
   summary: A 3-phase pipeline that beats SA on 6 of 12 graph families with constant sample complexity.
   authors: Ria Stevens, Fangshuo Liao, Barbara Su, Jianqiang Li, Anastasios Kyrillidis
+  map: [1340, 170]
   thumb: /assets/img/series/maxkcut_blog3_randr2.svg
   thumb_alt: Max-K-Cut series, blog 3
 - url: /LowRankMaxCut_Rank1.html
@@ -51,6 +57,7 @@
   series: Max-K-Cut series · blog 2
   summary: Incremental scoring, hybrid warm-starts, and extreme-scale experiments.
   authors: Ria Stevens, Fangshuo Liao, Barbara Su, Jianqiang Li, Anastasios Kyrillidis
+  map: [1100, 330]
   thumb: /assets/img/series/maxkcut_blog2_rank1.svg
   thumb_alt: Max-K-Cut series, blog 2
 - url: /LowRankMaxCut_GPU.html
@@ -60,6 +67,7 @@
   series: Max-K-Cut series · blog 1
   summary: GPU implementation, scaling experiments, interactive visualisations.
   authors: Ria Stevens, Fangshuo Liao, Barbara Su, Jianqiang Li, Anastasios Kyrillidis
+  map: [1390, 420]
   thumb: /assets/img/series/maxkcut_blog1_gpu.svg
   thumb_alt: Max-K-Cut series, blog 1
 - url: /MaxKCut.html
@@ -69,6 +77,7 @@
   series: Max-K-Cut series · overview
   summary: Algorithm overview, theoretical guarantees, and benchmarks for low-rank Max-3-Cut at scale.
   authors: Ria Stevens, Fangshuo Liao, Barbara Su, Jianqiang Li, Anastasios Kyrillidis
+  map: [560, 330]
   thumb: /assets/img/combined_erdos_ratios.jpg
   thumb_alt: "Bar charts comparing empirical approximation ratios on 5-regular graphs of varying sizes (left) and Erdos-Renyi graphs with n=100 and varying edge probabilities (right)"
 - url: /QuantumEigenGame.html
@@ -77,6 +86,7 @@
   minutes: 5
   summary: A game-theoretic decomposition of eigenvalue problems for quantum simulation of excited states.
   authors: David Quiroga, Jason Han, Anastasios Kyrillidis
+  map: [950, 700]
   thumb: /assets/img/qeig_system.png
   thumb_alt: Quantum EigenGame system overview
 - url: /QLSP_PPA.html
@@ -85,5 +95,6 @@
   minutes: 5
   summary: A classical-acceleration recipe, the proximal point algorithm, applied to quantum linear-system solvers.
   authors: Junhyung Lyle Kim, Nai-Hui Chia, Anastasios Kyrillidis
+  map: [250, 720]
   thumb: /assets/img/QLSP_algorithm.png
   thumb_alt: The PPA-wrapped QLSP algorithm
