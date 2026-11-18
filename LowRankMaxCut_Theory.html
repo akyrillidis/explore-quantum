@@ -15,146 +15,19 @@
 <meta name="twitter:image" content="https://akyrillidis.github.io/explore-quantum/assets/img/theory_sampling_n_independence.png" />
 <meta name="keywords" content="Max-K-Cut, Max-3-Cut, randomized rounding, sample complexity, low-rank, quadratic optimization, Hahn-Banach, Paley-Zygmund, Beta distribution, spectral methods, roots of unity">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Source+Sans+Pro:wght@400;600;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 
-<style>
-/* ===== TOOLTIPS ===== */
-.tooltip-term { border-bottom: 1px dotted #648FFF; cursor: help; position: relative; }
-.tooltip-term:hover::after {
-    content: attr(data-tooltip);
-    position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
-    background: #333; color: #fff; padding: 6px 10px; border-radius: 4px;
-    font-size: 0.8em; font-family: 'Source Sans Pro', sans-serif;
-    max-width: 320px; white-space: normal; z-index: 10; line-height: 1.4;
-}
-
-/* ===== RESET & BASE ===== */
-*, *::before, *::after { box-sizing: border-box; }
-body {
-    font-family: 'Source Serif Pro', Georgia, serif;
-    font-size: 17px; line-height: 1.7; color: #222; background: #fff;
-    margin: 0; padding: 0;
-}
-.container { max-width: 912px; margin: 0 auto; padding: 0 24px; }
-@media screen and (max-width: 1000px) {
-    .container { max-width: 95%; padding: 0 12px; }
-    body { font-size: 15px; }
-}
-
-/* ===== TYPOGRAPHY ===== */
-h1, h2, h3, h4 { font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-weight: 700; color: #1a1a1a; line-height: 1.3; }
-h1 { font-size: 2.2em; margin-top: 0; }
-h2 { font-size: 1.6em; margin-top: 2.5em; border-bottom: 2px solid #648FFF; padding-bottom: 6px; }
-h3 { font-size: 1.2em; margin-top: 1.8em; color: #333; }
-p { margin: 1em 0; }
-a { color: #648FFF; text-decoration: none; }
-a:hover { color: #785EF0; text-decoration: underline; }
-code, .mono { font-family: 'Fira Mono', monospace; font-size: 0.85em; background: #f4f4f8; padding: 2px 6px; border-radius: 3px; border: 1px solid #e0e0e0; }
-blockquote { border-left: 4px solid #648FFF; margin: 1.5em 0; padding: 0.5em 1em; background: #f8f9ff; color: #444; }
-strong { font-weight: 600; }
-table { border-collapse: collapse; margin: 1.5em auto; font-size: 0.92em; }
-th, td { padding: 8px 14px; text-align: center; border-bottom: 1px solid #ddd; }
-th { font-family: 'Source Sans Pro', sans-serif; border-bottom: 2px solid #648FFF; background: #f8f9ff; }
-
-/* ===== HERO ===== */
-.hero { text-align: center; padding: 60px 0 30px; }
-.hero h1 { font-size: 2.2em; margin-bottom: 0.3em; color: #1a1a1a; }
-.hero .subtitle { font-family: 'Source Sans Pro', sans-serif; font-size: 1.15em; color: #555; font-weight: 400; margin-bottom: 1.2em; font-style: italic; }
-.hero .authors { font-family: 'Source Sans Pro', sans-serif; font-size: 1.0em; color: #333; margin-bottom: 0.3em; }
-.hero .affiliation { font-family: 'Source Sans Pro', sans-serif; font-size: 0.9em; color: #666; margin-bottom: 1em; }
-.hero .date { font-size: 0.9em; color: #888; margin-bottom: 1em; }
-.hero .links a {
-    display: inline-block; margin: 4px 8px; padding: 8px 18px;
-    background: #648FFF; color: #fff; border-radius: 20px;
-    font-family: 'Source Sans Pro', sans-serif; font-size: 0.9em; font-weight: 600;
-}
-.hero .links a:hover { background: #785EF0; text-decoration: none; }
-.hero .links .chip-muted { background: #eceef5; color: #555; }
-.hero .links .chip-muted:hover { background: #e0e3ee; }
-
-/* ===== READING GUIDE ===== */
-.reading-guide {
-    background: #fbf9f2; border: 1px solid #e8e2cf; border-radius: 8px;
-    padding: 12px 18px; margin: 1.5em 0; font-size: 0.92em;
-    font-family: 'Source Sans Pro', sans-serif; color: #555;
-}
-
-/* ===== THEOREM BOXES (expert register) ===== */
-.theorem-box {
-    background: #f7f5ff; border: 1px solid #d4c9f5; border-left: 5px solid #785EF0;
-    border-radius: 6px; padding: 16px 20px; margin: 1.6em 0;
-}
-.theorem-box .thm-title { font-family: 'Source Sans Pro', sans-serif; font-weight: 700; color: #4c3a9e; margin-bottom: 6px; font-size: 0.95em; text-transform: uppercase; letter-spacing: 0.04em; }
-.theorem-box p { margin: 0.5em 0; }
-
-/* ===== PROOF-IDEA BOXES ===== */
-.proofidea-box {
-    background: #fafafa; border: 1px dashed #bbb; border-radius: 6px;
-    padding: 14px 18px; margin: 1.2em 0; font-size: 0.95em;
-}
-.proofidea-box .pi-title { font-family: 'Source Sans Pro', sans-serif; font-weight: 700; color: #666; margin-bottom: 4px; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.04em; }
-
-/* ===== INSIGHT BOXES ===== */
-.insight-box {
-    background: #f0f6ff; border: 1px solid #bcd2ff; border-left: 5px solid #648FFF;
-    border-radius: 6px; padding: 16px 20px; margin: 1.6em 0;
-}
-.insight-box .insight-title { font-family: 'Source Sans Pro', sans-serif; font-weight: 700; color: #2a5bd7; margin-bottom: 6px; }
-.insight-box p { margin: 0.5em 0; }
-
-/* ===== TOOLBOX CARDS ===== */
-.toolbox-card {
-    background: #fffdf5; border: 1px solid #ecdfa8; border-left: 5px solid #FFB000;
-    border-radius: 6px; padding: 14px 18px; margin: 1.6em 0;
-}
-.toolbox-card .tb-title { font-family: 'Source Sans Pro', sans-serif; font-weight: 700; color: #8a6712; margin-bottom: 4px; }
-.toolbox-card .tb-title::before { content: "🧰 "; }
-.toolbox-card p { margin: 0.4em 0; font-size: 0.95em; }
-.toolbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 1.5em 0; }
-.toolbox-grid .toolbox-card { margin: 0; }
-@media (max-width: 700px) { .toolbox-grid { grid-template-columns: 1fr; } }
-
-/* ===== INTERACTIVE BOXES ===== */
-.interactive-box {
-    background: #fcfcfe; border: 2px solid #648FFF; border-radius: 10px;
-    padding: 18px; margin: 2em 0;
-}
-.interactive-box .box-title { font-family: 'Source Sans Pro', sans-serif; font-weight: 700; font-size: 1.05em; color: #2a5bd7; margin-bottom: 10px; }
-.interactive-box .caption { font-size: 0.88em; color: #666; margin-top: 10px; line-height: 1.5; }
-.interactive-box .controls { font-family: 'Source Sans Pro', sans-serif; font-size: 0.9em; margin: 10px 0; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
-.interactive-box .controls label { font-weight: 600; color: #444; }
-.interactive-box input[type=range] { vertical-align: middle; width: 180px; }
-.interactive-box button {
-    font-family: 'Source Sans Pro', sans-serif; font-weight: 600; font-size: 0.88em;
-    background: #648FFF; color: #fff; border: none; border-radius: 16px;
-    padding: 6px 16px; cursor: pointer;
-}
-.interactive-box button:hover { background: #785EF0; }
-.interactive-box button.secondary { background: #eceef5; color: #444; }
-.interactive-box .readout { font-family: 'Fira Mono', monospace; font-size: 0.85em; background: #f4f4f8; border: 1px solid #e0e0e0; border-radius: 4px; padding: 3px 8px; }
-.svg-wrap { text-align: center; overflow-x: auto; }
-
-/* ===== FIGURES ===== */
-.figure { text-align: center; margin: 2em 0; }
-.figure img { max-width: 100%; border-radius: 6px; }
-.figure .figcap { font-size: 0.88em; color: #666; margin-top: 8px; text-align: left; line-height: 1.5; }
-.figure .figcap strong { color: #444; }
-
-/* ===== BADGE ===== */
-.n-badge {
-    display: inline-block; font-family: 'Source Sans Pro', sans-serif; font-weight: 700;
-    background: #DC267F; color: #fff; border-radius: 14px; padding: 2px 12px; font-size: 0.85em;
-}
-
-/* ===== FOOTER ===== */
-.footer { border-top: 2px solid #648FFF; margin-top: 3em; padding: 1.5em 0 2.5em; font-size: 0.88em; color: #666; }
-</style>
+<!-- site:head -->
+<link rel="icon" type="image/png" href="./assets/img/brand/favicon.png">
+<link rel="stylesheet" href="./assets/css/site.css">
+<link rel="stylesheet" href="./assets/css/post-legacy.css">
+<!-- /site:head -->
 </head>
-<body>
+<body class="post-legacy post-lowrankmaxcut-theory">
+<!-- site:bar -->
+<div id="site-bar" class="site-bar" role="banner"><div class="site-bar__in"><a class="site-brand" href="./"><span class="site-mark" aria-hidden="true"></span><span class="site-name">QuanTAS</span></a><div class="site-nav" role="navigation" aria-label="Site"><a href="./blogposts.html">Blog</a><a href="./publications.html">Publications</a><a href="./#people">People</a></div></div></div>
+<!-- /site:bar -->
 <div class="container">
 
 <!-- ================= HERO ================= -->
@@ -953,5 +826,8 @@ dS.addEventListener("change", render2);
 render2();
 })();
 </script>
+<!-- site:foot -->
+<div id="site-foot" class="site-foot" role="contentinfo"><div class="site-foot__in"><div class="site-foot__brand"><a class="site-brand" href="./"><span class="site-mark" aria-hidden="true"></span><span class="site-name">QuanTAS</span></a><p>Understanding the limits of Quantum Theory, Algorithms and Systems. Supported by Ken Kennedy Institute (Rice University).</p></div><div class="site-foot__links"><a href="./blogposts.html">Blog</a><a href="./publications.html">Publications</a><a href="https://www.rice.edu/">Rice University</a></div></div></div>
+<!-- /site:foot -->
 </body>
 </html>

@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: home
 ---
 
 Our research group, comprised of dedicated CS and ECE students and esteemed faculty, is at the forefront of exploring groundbreaking advancements in quantum optimization and algorithms. Our work delves into the complexities and potential of quantum linear systems of equations problems, Quantum Approximate Optimization Algorithm (QAOA), Variational Quantum Eigensolvers (VQEs), and other cutting-edge techniques. By leveraging quantum computing's and quantum systems' unique capabilities, we aim to solve computational problems that are currently solvable by classical systems but rather inefficiently, thereby pushing the boundaries of what's possible in computer science and practical applications.
