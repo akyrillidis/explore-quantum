@@ -67,7 +67,7 @@
   series: Max-K-Cut series · blog 1
   summary: GPU implementation, scaling experiments, interactive visualisations.
   authors: Ria Stevens, Fangshuo Liao, Barbara Su, Jianqiang Li, Anastasios Kyrillidis
-  map: [950, 400]
+  map: [1200, 400]
   thumb: /assets/img/series/maxkcut_blog1_gpu.svg
   thumb_alt: Max-K-Cut series, blog 1
 - url: /MaxKCut.html
